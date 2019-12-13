@@ -1,3 +1,2 @@
 (ns sky-deck.core-test
-    (:require
-     [cljs.test :refer-macros [deftest is testing]]))
+    (:require [cljs.test :refer-macros [deftest is testing]]))

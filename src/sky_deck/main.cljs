@@ -10,11 +10,55 @@
 (devtools/install!)
 (enable-console-print!)
 
-(s/def :battle/number number?)
+;"Quick Attack",
+;"Hard Attack",
+;"Precise Attack",
+;"Cast Spell",
+;"Quick Defend",
+;"Hard Defend",
+;"Precise Defend",
+;"Focus",
+;"Full",
+;"Move",
+;"Other",
+;"Blink",
+;"Burst"
+
+(defn get-app-element
+  []
+  (gdom/getElement "app"))
 
 (def default-db-value
-  {:battle/number nil
-   :form/input {:join-battle-inputs {}}})
+  {:action-types {:quick-attack  {:name "Quick-Attack"}
+                  :hard-attack  {:name "Hard Attack"}
+                  :precise-attack {:name "Precise Attack"}
+                  :cast-spell {:name "Cast Spell"}
+                  :quick-defend {:name "Quick Defend"}
+                  :hard-defend {:name  "Hard Defend"}
+                  :precise-defend {:name "Precise Defend"}
+                  :focus {:name "Focus"}
+                  :full {:name "Full"}
+                  :move  {:name "Move"}
+                  :other {:name "Other "}
+                  :blink {:name "Blink"}
+                  :burst {:name "Burst"}}
+
+   :characters {3  {:id 3 :name "Zape" :actions 2 :type :player}
+                4  {:id 4 :name "Sadie" :actions 2 :type :player}
+                6  {:id 6 :name "Duck" :actions 2 :type :player}
+                7  {:id 7 :name "Azagoth DuTrey" :actions 2 :type :npc}}
+
+   :battles  {1 {:id 1
+                 :state :started  ;; finished
+                 :current-round 2
+                 :rounds
+                 [{:id 2
+                 :state :open ;; started locked finished
+                 :actions [{:id 5
+                            :type :hard-attack
+                            :source 3
+                            :target 4}]}]}}
+   :current-battle-id nil})
 
 (rf/reg-event-db
   ::initialise-world
@@ -24,75 +68,44 @@
 (rf/reg-event-db
   ::join-battle
   (fn [db [_ battle-number]]
-    (pp/pprint battle-number)
-    (assoc db :battle/number battle-number)))
-
-(rf/reg-event-db
-  ::set-battle-number-input
-  (fn [db [op value]]
-    (assoc-in db [:form/input :join-battle-inputs] value)))
+    (assoc db :sky-deck/battle-current-number battle-number)))
 
 (rf/reg-sub
-  ::set-battle-number-input
-  (fn [db]
-    (get-in db [:form/input :join-battle-inputs])))
+  ::get-current-battle
+  (fn [db _]
+    (get-in db [:battles (:current-battle-id db)])))
 
-(def round-states #{:round.state/un-started
-                    :round.state/locked-actions})
+(rf/reg-sub
+  ::current-battle
+  (fn [_ _]
+    (rf/subscribe [::get-current-battle])))
 
-(def actions [{:action/name :quick-attack}
-              {:action/name :hard-attack}
-              {:action/name :precise-attack}
-              {:action/name :cast-spell}
-              {:action/name :quick-defend}
-              {:action/name :hard-defend}
-              {:action/name :precise-defend}
-              {:action/name :focus}
-              {:action/name :full}
-              {:action/name :move}
-              {:action/name :other}
-              {:action/name :blink}
-              {:action/name :burst}])
-
-(def round-state->title
-  {:round.state/select-actions "Select Actions"
-   :round.state/join-battle "Welcome to Sky"})
-
-(defn gen-select-actions
-  []
-  {:round/state :round.state/select-actions
-   :round/selected-actions {}})
-
-(defn get-app-element
-  []
-  (gdom/getElement "app"))
 
 (defn join-battle []
-  [:div
-   [:form
+  (let [battle-input (atom nil)]
     [:div
-     [:input
-      {:type        "number"
-       :placeholder "Battle Number"
-       :on-change (fn [event]
-                    (rf/dispatch [::set-battle-number-input (js/parseInt (.-value (.-target event)))]))
-       :id          "battle-number"}]]
-    [:div
-     [:button
-      {:on-click (fn [event]
-                   (.preventDefault event)
-                   (rf/dispatch [::join-battle @(rf/subscribe [::set-battle-number-input])]))}
-      "Join Battle!"]]]])
-
-(defn list-actions
-  []
-  (let []))
+     [:form
+      [:div
+       [:input
+        {:type        "number"
+         :name         "battle-number"
+         :placeholder "Battle Number"
+         :on-change   (fn [event]
+                        (let [battle-number (js/parseInt (.-value (.-target event)))]
+                          (reset! battle-input battle-number)))}]]
+      [:div
+       [:button
+        {:on-click (fn [event]
+                     (.preventDefault event)
+                     (rf/dispatch [::join-battle @battle-input]))}
+        "Join Battle!"]]]]))
 
 (defn index
   []
-  (let []
+  (if-let [current-battle @(rf/subscribe [::current-battle])]
     [:div
-     [join-battle]]))
+     [join-battle]]
+    [:div "Battle"]))
 
 (defn mount [el]
   (reagent/render-component [index] el))

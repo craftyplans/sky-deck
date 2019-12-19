@@ -29,6 +29,16 @@
   (when-let [battle (get-current-battle db)]
     (get-in battle [:hands (:current-hand-id battle)])))
 
+(defn get-locked-actions
+  [db]
+  (when-let [current-hand (get-current-hand db)]
+    (for [[action-id action-count] (:actions current-hand)]
+      [action-id
+       (assoc (get-in db [:action-types action-id]) :action-count action-count)])))
+
+(defn get-current-character
+  [db]
+  (get-in db [:characters (:current-character-id db)]))
 
 (defn locked?
   [hand]
@@ -85,6 +95,12 @@
     (assoc db :current-battle-id battle-number)))
 
 (rf/reg-event-db
+  ::leave-battle
+  [rf/debug]
+  (fn [db [_operation]]
+    (assoc db :current-battle-id nil)))
+
+(rf/reg-event-db
   ::select-action
   [rf/debug]
   (fn [db [_operation battle-id hand-id action-type]]
@@ -94,7 +110,6 @@
   ::confirm-actions
   (fn [db [_operation battle-id hand-id]]
     (update-in db [:battles battle-id :hands hand-id] assoc :state :locked)))
-
 
 (rf/reg-sub
   ::get-current-battle
@@ -111,17 +126,15 @@
   (fn [db _]
     (get-current-hand db)))
 
-(defn get-locked-actions
-  [db]
-  (when-let [current-hand (get-current-hand db)]
-    (for [[action-id action-count] (:actions current-hand)]
-      [action-id
-       (assoc (get-in db [:action-types action-id]) :action-count action-count)])))
-
 (rf/reg-sub
   ::get-locked-actions
   (fn [db _]
     (get-locked-actions db)))
+
+(rf/reg-sub
+  ::get-current-character
+  (fn [db _]
+    (get-current-character db)))
 
 (defn join-battle []
   (let [battle-input (atom nil)]
@@ -151,12 +164,14 @@
      [:ul
       (for [[id action-type] action-types]
         ^{:key id}
-        [:li [:a
-              {:href "#"
-               :on-click (fn [event]
-                           (rf/dispatch [::select-action (:id battle) (:id current-hand) id]))}
-              (:name action-type) " "
-              (get-in current-hand [:actions id])]])]]))
+        [:li
+         [:div
+          [:a
+           {:href     "#"
+            :on-click (fn [event]
+                        (rf/dispatch [::select-action (:id battle) (:id current-hand) id]))}
+           (:name action-type)
+           (get-in current-hand [:actions id])]]])]]))
 
 (defn confirm-actions
   [battle]
@@ -184,18 +199,24 @@
      [:ul
       (for [[id action] select-actions]
         ^{:key id}
-        [:li [:p (:name action) " " (:action-count action)]])]]))
+        [:li [:p (:name action) " " (:action-count action)]])]
+     [:div [:button {:on-click (fn [event]
+                                 (.preventDefault event)
+                                 (rf/dispatch [::leave-battle]))} "Return"]]]))
 
 (defn index
   []
   [:div
-   [:h1 "Sky"]
    (let [current-battle @(rf/subscribe [::get-current-battle])
-         current-hand @(rf/subscribe [::get-current-hand])]
-     (cond
-       (locked? current-hand) [:div [display-locked-actions current-battle current-hand]]
-       (some? current-battle) [:div [display-battle current-battle]]
-       :else [:div [join-battle]]))])
+         current-hand @(rf/subscribe [::get-current-hand])
+         current-character @(rf/subscribe [::get-current-character])]
+     [:div
+      [:h1 "Sky"]
+      [:div [:p (:name current-character)]]
+      (cond
+        (locked? current-hand) [:div [display-locked-actions current-battle current-hand]]
+        (some? current-battle) [:div [display-battle current-battle]]
+        :else [:div [join-battle]])])])
 
 (defn mount [el]
   (reagent/render-component [index] el))

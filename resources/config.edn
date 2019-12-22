@@ -1,0 +1,3 @@
+#:for-humans{:ragtime.migrations {:connection-uri
+                                  "jdbc:postgresql://localhost/sky-deck"
+                                  :migration-edn-file "migrations.edn"}}

@@ -1,0 +1,55 @@
+[{:down ["drop extension \"uuid-ossp\";"]
+  :id   :create-extension
+  :up   ["create extension \"uuid-ossp\";"]}
+
+ {:id :add-character
+  :down {:drop-table :character}
+  :up {:create-table [:character]
+       :with-columns [[[:id :uuid #sql-call [:primary-key] :default
+                        #sql-call [:uuid_generate_v1mc]]
+                       [:create_at :timestamptz #sql-call [:not nil] :default
+                        #sql-call [:clock_timestamp]]
+                       [:updated_at :timestamptz #sql-call [:not nil] :default
+                        #sql-call [:clock_timestamp]]
+
+                       [:name #sql-call [:varchar 255]]
+
+                       ]]}}
+
+ {:id :add-battle
+  :down {:drop-table :battle}
+  :up {:create-table [:battle]
+       :with-columns [[[:id :uuid #sql-call [:primary-key] :default #sql-call [:uuid_generate_v1mc]]
+                       [:create_at :timestamptz #sql-call [:not nil] :default
+                        #sql-call [:clock_timestamp]]
+                       [:updated_at :timestamptz #sql-call [:not nil] :default
+                        #sql-call [:clock_timestamp]]
+                       [:number :serial]
+                       ]]}}
+
+ {:down {:drop-table [:person]}
+  :id :add-person
+  :up
+  {:create-table [:person]
+   :with-columns
+   [[
+
+     [:id :uuid #sql-call [:primary-key] :default
+      #sql-call [:uuid_generate_v1mc]]
+
+
+     [:create_at :timestamptz #sql-call [:not nil] :default
+      #sql-call [:clock_timestamp]]
+
+     [:updated_at :timestamptz #sql-call [:not nil] :default
+      #sql-call [:clock_timestamp]]
+
+     [:name :text]
+     [:username :text #sql-call [:not nil]]
+     [:email :text]
+     [:enabled :boolean :default true]
+     [#sql-call [:unique :email]]
+     [#sql-call [:unique :username]]]]}}
+
+
+]

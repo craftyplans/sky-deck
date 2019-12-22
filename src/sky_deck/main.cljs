@@ -45,21 +45,21 @@
   (= (:state hand) :locked))
 
 (def default-db-value
-  {:action-types      {:quick-attack   {:name "Quick-Attack"}
-                       :hard-attack    {:name "Hard Attack"}
-                       :precise-attack {:name "Precise Attack"}
-                       :cast-spell     {:name "Cast Spell"}
-                       :quick-defend   {:name "Quick Defend"}
-                       :hard-defend    {:name "Hard Defend"}
-                       :precise-defend {:name "Precise Defend"}
-                       :focus          {:name "Focus"}
-                       :full           {:name "Full"}
-                       :move           {:name "Move"}
-                       :other          {:name "Other "}
-                       :blink          {:name "Blink"}
-                       :burst          {:name "Burst"}}
+  {:action-types      {:quick-attack   {:id :quick-attack :name "Quick-Attack"}
+                       :hard-attack    {:id :hard-attack :name "Hard Attack"}
+                       :precise-attack {:id :precise-attack :name "Precise Attack"}
+                       :cast-spell     {:id :cast-spell :name "Cast Spell"}
+                       :quick-defend   {:id :quick-defend :name "Quick Defend"}
+                       :hard-defend    {:id :hard-defend :name "Hard Defend"}
+                       :precise-defend {:id :precise-defend :name "Precise Defend"}
+                       :focus          {:id :focus :name "Focus"}
+                       :full           {:id :full :name "Full"}
+                       :move           {:id :move :name "Move"}
+                       :other          {:id :other :name "Other "}
+                       :blink          {:id :blink :name "Blink"}
+                       :burst          {:id :burst :name "Burst"}}
 
-   :characters        {3 {:id 3 :name "Zape" :actions 2 :type :player}
+   :characters        {3 {:id 3 :name "Zape" :actions 2 :type :player :magic-schools [:fire :water :earth]}
                        4 {:id 4 :name "Sadie" :actions 2 :type :player}
                        6 {:id 6 :name "Duck" :actions 2 :type :player}
                        7 {:id 7 :name "Azagoth DuTrey" :actions 2 :type :npc}

@@ -9,14 +9,20 @@
                  [reagent "0.8.1"]
                  [re-frame "0.11.0-rc3"]
                  [re-graph "0.1.11"]
-                 [seancorfield/next.jdbc "1.0.10"]
                  [io.lettuce/lettuce-core "5.2.1.RELEASE"]
                  [ragtime "0.8.0"]
                  [aero "1.1.3"]
+
                  [metosin/porsas "0.0.1-alpha13"]
                  [honeysql "0.9.8"]
                  [nilenso/honeysql-postgres "0.2.6"]
                  [org.postgresql/postgresql "42.2.8"]
+                 [seancorfield/next.jdbc "1.0.10"]
+
+                 [cambium/cambium.core         "0.9.3"]
+                 [cambium/cambium.codec-simple "0.9.3"]
+                 [cambium/cambium.logback.core "0.4.3"]
+
                  [integrant "0.7.0"]
                  [buddy/buddy-hashers "1.4.0"]]
   :source-paths ["src" "lib"]

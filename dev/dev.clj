@@ -25,4 +25,8 @@
 
   (sd.mutations/generate-campaign {:campaign-inputs {}})
 
+  (sql/format
+    (sd.mutations/generate-action-type {:action-type-inputs {:name "Hard Attack"
+                                                             :slug "hard-attack"}}))
+
   )

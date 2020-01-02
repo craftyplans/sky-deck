@@ -53,7 +53,7 @@
 (defn generate-campaign
   [{:keys [new-id campaign-inputs]
     :as   _campaign-args}]
-  {:insert-into [:campaign]
+  {:insert-into :campaign
    :values [(m/assoc-some campaign-inputs :id new-id)]
    :returning [:*]})
 
@@ -67,7 +67,7 @@
 (defn generate-session
   [{:keys [new-id campaign-id]
     :as   _session-args}]
-  {:insert-into [:session]
+  {:insert-into :session
    :values [(m/assoc-some {:campaign_id campaign-id} :id new-id)]
    :returning [:*]})
 
@@ -123,7 +123,7 @@
 
 (defn generate-character
   [{:keys [new-id person-id campaign-id character-inputs]}]
-  {:insert-into [:character]
+  {:insert-into :character
    :values [(m/assoc-some character-inputs
                           :id new-id
                           :person_id person-id
@@ -134,11 +134,51 @@
         :args (s/cat :character-args ::character-args)
         :ret map?)
 
+(s/def ::action-type-inputs (s/keys :req-un [::name ::slug]))
+
+(s/def ::action-type-args (s/keys :req-un [::action-type-inputs]
+                                  :opt-un [::new-id]))
+
 (defn generate-action-type
-  [{:keys [new-id action-name action-type]}]
-  {:insert-into [:action-type]
-   :values [(m/assoc-some {} :id new-id)]
+  [{:keys [new-id action-type-inputs]}]
+  {:insert-into :action_type
+   :values [(m/assoc-some action-type-inputs :id new-id)]
    :returning [:*]})
+
+(s/fdef generate-action-type
+        :args (s/cat ::action-type ::action-type-args))
+
+;+--------------+------------+----------------------------------------+
+;| Column       | Type       | Modifiers                              |
+;|--------------+------------+----------------------------------------|
+;| id           | uuid       |  not null default uuid_generate_v1mc() |
+;| round_id     | uuid       |                                        |
+;| character_id | uuid       |                                        |
+;| battle_id    | uuid       |                                        |
+;| state        | hand_state |  default 'open'::hand_state            |
+;+--------------+------------+----------------------------------------+
+
+(s/def ::round-id ::id)
+(s/def ::character-id ::id)
+(s/def ::battle-id ::id)
+(s/def ::state #{"open" "closed"})
+
+(s/def ::hand-args (s/keys :req-un [::round-id ::character-id ::battle-id]
+                           :opt-un [::state ::new-id]))
+
+(defn generate-hand
+  [{:keys [new-id round-id character-id battle-id state]}]
+  {:insert-into :hand
+   :values [(m/assoc-some {:round_id round-id
+                           :character_id character-id
+                           :battle_id battle-id}
+                          :id new-id
+                          :state state)]
+   :returning [:*]})
+
+(s/fdef generate-hand
+        :args (s/cat :hand-args ::hand-args)
+        :ret map?)
 
 (defn generate-battle
   [{:keys [new-id campaign-id]}])

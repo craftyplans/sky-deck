@@ -1,2 +1,2 @@
-drop table character_type;
 drop table character;
+drop type character_type;

@@ -44,7 +44,8 @@
 
 (s/def ::description ::text)
 (s/def ::dungeon_master_id ::id)
-(s/def ::campaign-inputs (s/keys :req-un [::dungeon_master_id ::description ::name]))
+
+(s/def ::campaign-inputs (s/keys :req-un [::dungeon_master_id]))
 
 (s/def ::campaign-args
   (s/keys :req-un [::campaign-inputs]
@@ -77,57 +78,49 @@
 
 (s/def ::name string?)
 (s/def ::background string?)
-(s/def ::hit-point-max number?)
-(s/def ::hit-point-current number?)
+(s/def ::hit_point_max number?)
+(s/def ::hit_point_current number?)
 (s/def ::agility ::pos-number?)
 (s/def ::strength ::pos-number?)
 (s/def ::mind ::pos-number?)
 (s/def ::soul ::pos-number?)
-(s/def ::skill-points ::pos-number?)
+(s/def ::skill_points ::pos-number?)
 (s/def ::reputation ::pos-number?)
-(s/def ::master-points ::pos-number?)
-(s/def ::divinity-points ::pos-number?)
+(s/def ::master_points ::pos-number?)
+(s/def ::divinity_points ::pos-number?)
 (s/def ::moments ::pos-number?)
-(s/def ::past-lives ::pos-number?)
+(s/def ::past_lives ::pos-number?)
 (s/def ::charges ::pos-number?)
 (s/def ::age ::pos-number?)
-(s/def ::height ::pos-number?)
-(s/def ::clothes string?)
+(s/def ::type #{"player" "npc"})
 
 (s/def ::character-inputs
   (s/keys :req-un [::name
-                   ::deck
+                   ::type
                    ::hit_point_max
                    ::hit_point_current
                    ::agility
                    ::strength
                    ::mind
                    ::soul
-                   ::skill-points
+                   ::skill_points
                    ::reputation
-                   ::master_points
                    ::divinity_points
                    ::moments
                    ::past_lives
                    ::charges
                    ::age
-                   ::clothes
-                   ::height
                    ::background]))
 
 (s/def ::character-args
-  (s/keys :req-un [::new-id
-                   ::person-id
-                   ::campaign-id
-                   ::character-inputs]))
+  (s/keys :req-un [::character-inputs]
+          :opt-un [::new-id]))
 
 (defn generate-character
-  [{:keys [new-id person-id campaign-id character-inputs]}]
+  [{:keys [new-id character-inputs]}]
   {:insert-into :character
    :values [(m/assoc-some character-inputs
-                          :id new-id
-                          :person_id person-id
-                          :campaign_id campaign-id)]
+                          :id new-id)]
    :returning [:*]})
 
 (s/fdef generate-character
@@ -147,6 +140,9 @@
 
 (s/fdef generate-action-type
         :args (s/cat ::action-type ::action-type-args))
+
+(defn generate-battle
+  [{:keys [new-id campaign-id]}])
 
 ;+--------------+------------+----------------------------------------+
 ;| Column       | Type       | Modifiers                              |
@@ -180,8 +176,3 @@
         :args (s/cat :hand-args ::hand-args)
         :ret map?)
 
-(defn generate-battle
-  [{:keys [new-id campaign-id]}])
-
-(defn generate-hand
-  [{:keys [new-id]}])

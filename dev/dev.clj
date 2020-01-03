@@ -83,14 +83,14 @@
                                    :operation/name "create_campaign"}
                        :variables [{:variable/name :$name
                                     :variable/type :String!}]
-                       :queries   [[:create_campaign {:name :$name} [:id]]]})
+                       :queries   [[:create_campaign {:name :$name} [:id :number]]]})
              params
              {:sky-deck/datasource ds
               :sky-deck/auth {:person-id ivan-id}}))
 
 (defn list-campaigns
   [ds]
-  (l/execute schema (graphql/graphql-query {:queries [[:list_campaigns [:id]]]})
+  (l/execute schema (graphql/graphql-query {:queries [[:list_campaigns [:id :number :state [:dungeon_master [:id :username :email]]]]]})
              nil
              {:sky-deck/datasource ds
               :sky-deck/auth {:person-id ivan-id}}))
@@ -101,6 +101,7 @@
   (sky-deck.queries/person-by-username ds "ivan")
 
   (sky-deck.queries/campaign-by-number ds 1)
+
 
   (sd.graphql/compile-dungeon-master-api)
 

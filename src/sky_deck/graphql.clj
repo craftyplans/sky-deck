@@ -35,9 +35,13 @@
 
 (def shared-objects
   {:Person {:implements [:Node]
-            :fields {:id {:type '(non-null ID)}
-                     :username {:type 'String}
-                     :email {:type 'String}}}
+            :fields {:id {:type '(non-null ID)
+                          :resolve (fn [_ _ value]
+                                     (to-global-id :Person (:person/id value)))}
+                     :username {:type 'String
+                                :resolve (fn [_ _ value] (:person/username value))}
+                     :email {:type 'String
+                             :resolve (fn [_ _ value] (:person/email value))}}}
 
    :Viewer {:implements [:Node]
             :fields {:id {:type '(non-null ID)}}}
@@ -85,6 +89,8 @@
                          :action_type {:type :ActionType}
                          :target {:type :Character}}}
 
+   ;; TODO (Ivan) Figure out better way of mapping namespaced keywords to graphql
+   ;; Also, how do we use pathom
    :Campaign {:implements [:Node]
               :fields {:id {:type '(non-null ID)
                             :resolve (fn [_ _ value]
@@ -93,11 +99,18 @@
                                 :resolve (fn [_ _ value]
                                            (:campaign/number value))}
                        :state {:type 'String}
-                       :dungeon_master {:type :Person}
+                       :dungeon_master {:type :Person
+                                        :resolve (fn [{:sky-deck/keys [datasource auth]} _ value]
+                                                   (sky-deck.queries/person-by-id
+                                                     datasource
+                                                     (:campaign/dungeon_master_id value)))}
+
                        :players {:type '(list :Character)}}}
 
    :Character {:implements [:Node]
-               :fields {:id {:type '(non-null ID)}
+               :fields {:id {:type '(non-null ID)
+                             :resolve (fn [_ _ value]
+                                        (to-global-id :Character (:character/id value)))}
                         :name {:type 'String}
                         :type {:type 'String}
                         :hit_point_max {:type 'Int}
@@ -125,13 +138,13 @@
                                      :description ""
                                      :args        {:name {:type 'String}}
                                      :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
-                                                    (let [results (jdbc/execute-one!
-                                                                    datasource
-                                                                    (sql/format (sd.mutations/generate-campaign {:campaign-inputs
-                                                                                                                 {:dungeon_master_id (:person-id auth)}})))]
-                                                      (clojure.pprint/pprint [:results results])
-                                                      results
-                                                      ))}}
+                                                    (sd.mutations/add-campaign datasource {:campaign-inputs
+                                                                                           {:dungeon_master_id (:person-id auth)}}))}
+                   :create_npc_character {:type :Character
+                                          :description ""
+                                          :args {:name {:type 'String}}
+                                          :resolve (fn [{:sky-deck/keys [datasource auth]} args _]
+                                                     (sd.mutations/add-npc-character datasource {:character-inputs args}))}}
 
    :queries       {:list_campaigns {:type    '(list :Campaign)
                                     :resolve (fn [{:sky-deck/keys [datasource auth]} args _]
@@ -140,9 +153,6 @@
 (defn compile-dungeon-master-api
   []
   (schema/compile dungeon-master-api-schema))
-
-
-
 
 (def authenticated-player-api-schema
   {:objects shared-objects})

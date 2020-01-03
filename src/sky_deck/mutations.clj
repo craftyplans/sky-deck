@@ -6,16 +6,13 @@
             [next.jdbc :as jdbc]
             [honeysql-postgres.format]
             [honeysql-postgres.helpers]
-            [honeysql.core :as sql])
+            [honeysql.core :as sql]
+            [sky-deck.db :as db])
   (:import (java.util UUID)))
 
 (defn new-id
   []
   (UUID/randomUUID))
-
-(defn run-sql-map
-  [ds sql-map]
-  (jdbc/execute-one! ds (sql/format sql-map)))
 
 (s/def ::id uuid?)
 
@@ -67,6 +64,10 @@
 (s/fdef generate-campaign
         :args (s/cat :campaign-args ::campaign-args)
         :ret map?)
+
+(defn add-campaign
+  [ds opts]
+  (db/execute-one-sql ds (generate-campaign opts)))
 
 (s/def ::session-args (s/keys :req-un [::campaign-id]
                               :opt-un [::new-id]))
@@ -132,6 +133,10 @@
 (s/fdef generate-character
         :args (s/cat :character-args ::character-args)
         :ret map?)
+
+(defn add-npc-character
+  [ds opts]
+  (db/execute-one-sql ds (generate-character opts)))
 
 (s/def ::action-type-inputs (s/keys :req-un [::name ::slug]))
 

@@ -3,13 +3,19 @@
             [buddy.hashers :as hashers]
             [clojure.string :as str]
             [medley.core :as m]
+            [next.jdbc :as jdbc]
             [honeysql-postgres.format]
-            [honeysql-postgres.helpers])
+            [honeysql-postgres.helpers]
+            [honeysql.core :as sql])
   (:import (java.util UUID)))
 
 (defn new-id
   []
   (UUID/randomUUID))
+
+(defn run-sql-map
+  [ds sql-map]
+  (jdbc/execute-one! ds (sql/format sql-map)))
 
 (s/def ::id uuid?)
 

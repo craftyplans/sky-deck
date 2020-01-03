@@ -21,6 +21,7 @@
                  [org.postgresql/postgresql "42.2.8"]
                  [seancorfield/next.jdbc "1.0.10"]
                  [ragtime "0.8.0"]
+                 [com.wsscode/pathom "2.2.28"]
 
                  [cambium/cambium.core         "0.9.3"]
                  [cambium/cambium.codec-simple "0.9.3"]

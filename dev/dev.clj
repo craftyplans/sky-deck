@@ -5,7 +5,11 @@
             [expound.alpha :as expound]
             [orchestra.spec.test :as st]
             [sky-deck.mutations :as sd.mutations]
+            [sky-deck.queries :as sky-deck.queries]
+            [sky-deck.graphql :as sd.graphql]
             [next.jdbc :as jdbc]
+            [com.walmartlabs.lacinia :as l]
+            [graphql-query.core :as graphql]
             [honeysql.core :as sql]))
 
 (set! s/*explain-out* expound/printer)
@@ -52,6 +56,62 @@
 (def eric-id #uuid"4f00d2e3-78b9-4379-ab95-f927be2882d0")
 (def ivan-id #uuid"94fceaea-93be-494c-aa77-a9b089065d46")
 (def session-id  #uuid"5dc4ed3e-2d89-11ea-816b-3fb3eded8071")
+
+(def schema (sd.graphql/compile-dungeon-master-api))
+
+
+(defn execute-graphql
+  [ds ])
+
+(comment
+
+  (graphql/graphql-query
+    {:operation {:operation/type :mutation
+                 :operation/name "create_campaign"}
+     :variables [{:variable/name :$name
+                  :variable/type :String!}]
+     :queries   [[:create_campaign {:name :$name} [:id]]]})
+
+
+  )
+
+
+(defn create-campaign
+  [ds params]
+  (l/execute schema (graphql/graphql-query
+                      {:operation {:operation/type :mutation
+                                   :operation/name "create_campaign"}
+                       :variables [{:variable/name :$name
+                                    :variable/type :String!}]
+                       :queries   [[:create_campaign {:name :$name} [:id]]]})
+             params
+             {:sky-deck/datasource ds
+              :sky-deck/auth {:person-id ivan-id}}))
+
+(defn list-campaigns
+  [ds]
+  (l/execute schema (graphql/graphql-query {:queries [[:list_campaigns [:id]]]})
+             nil
+             {:sky-deck/datasource ds
+              :sky-deck/auth {:person-id ivan-id}}))
+
+
+(comment
+
+  (sky-deck.queries/person-by-username ds "ivan")
+
+  (sky-deck.queries/campaign-by-number ds 1)
+
+  (sd.graphql/compile-dungeon-master-api)
+
+  (create-campaign ds {:name "test"})
+
+
+  (list-campaigns ds)
+
+
+  )
+
 
 (comment
 

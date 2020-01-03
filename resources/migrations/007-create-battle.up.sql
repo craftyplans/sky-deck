@@ -10,5 +10,7 @@ create table battle (
     deleted_at timestamptz,
     number serial,
     state battle_state default 'started',
-    initiated_by_id uuid references character
+    initiated_by_id uuid references character,
+    session_id uuid references session,
+    campaign_id uuid references campaign
 )

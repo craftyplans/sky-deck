@@ -27,7 +27,19 @@
                  [cambium/cambium.logback.core "0.4.3"]
 
                  [integrant "0.7.0"]
+
+                 [yada "1.2.16"]
+                 [bidi "2.1.6"]
+
+                 [metosin/jsonista "0.2.3"]
+                 [aleph "0.4.6"]
+                 [com.cerner/clara-rules "0.19.1"]
+
+                 [funcool/cuerdas "2.2.0"]
+                 [com.walmartlabs/lacinia "0.33.0"]
+
                  [buddy/buddy-hashers "1.4.0"]]
+
   :source-paths ["src" "lib"]
   :uberjar-name "sky-deck.jar"
   :main sky-deck.main

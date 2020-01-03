@@ -96,7 +96,6 @@
 
 (s/def ::character-inputs
   (s/keys :req-un [::name
-                   ::type
                    ::hit_point_max
                    ::hit_point_current
                    ::agility
@@ -110,7 +109,8 @@
                    ::past_lives
                    ::charges
                    ::age
-                   ::background]))
+                   ::background]
+          :opt-un [::type]))
 
 (s/def ::character-args
   (s/keys :req-un [::character-inputs]
@@ -142,7 +142,20 @@
         :args (s/cat ::action-type ::action-type-args))
 
 (defn generate-battle
-  [{:keys [new-id campaign-id]}])
+  [{:keys [new-id campaign-id session-id initiated-by-id]}]
+  {:insert-into :battle
+   :values [(m/assoc-some {:campaign_id campaign-id
+                           :session_id session-id}
+                          :id new-id
+                          :initiated_by_id initiated-by-id)]
+   :returning [:*]})
+
+
+(defn generate-round
+  [{:keys [new-id battle-id campaign-id]}]
+  {:insert-into :round
+   :values [(m/assoc-some {:battle_id battle-id} :id new-id)]
+   :returning [:*]})
 
 ;+--------------+------------+----------------------------------------+
 ;| Column       | Type       | Modifiers                              |

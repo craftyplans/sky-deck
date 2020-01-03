@@ -27,7 +27,7 @@
 (def ds (jdbc/get-datasource dev-db))
 
 (def default-actions
-  {:quick-attack   {:id :quick-attack :name "Quick-Attack"}
+  {:quick-attack   {:id :quick-attack :name "Quick Attack"}
    :hard-attack    {:id :hard-attack :name "Hard Attack"}
    :precise-attack {:id :precise-attack :name "Precise Attack"}
    :cast-spell     {:id :cast-spell :name "Cast Spell"}
@@ -73,7 +73,6 @@
 
   (ep ds (sd.mutations/generate-character {:person-id #uuid "dd91ac10-2d83-11ea-abec-abc86e648df9"
                                            :character-inputs {:name "Zape"
-                                                              :type "player"
                                                               :background "An angry monkey"
                                                               :hit_point_max 170
                                                               :hit_point_current (- 170 28)
@@ -91,9 +90,10 @@
 
   (ep ds (sd.mutations/generate-session {:campaign-id current-campaign-id}))
 
-  (sd.mutations/generate-battle {:campaign-id current-campaign-id
-                                 :session-id session-id})
-
+  (ep ds
+      (sd.mutations/generate-battle {:campaign-id     current-campaign-id
+                                     :session-id      #uuid"6fabbaaa-2d98-11ea-be2d-973175adc052"
+                                     :initiated-by-id #uuid"6231623a-2d98-11ea-8c1b-43bffe3fe6dd"}))
 
   )
 

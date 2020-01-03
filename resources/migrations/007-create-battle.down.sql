@@ -1,2 +1,2 @@
 drop table battle;
-drop table battle_state;
+drop type battle_state;

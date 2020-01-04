@@ -88,6 +88,18 @@
              {:sky-deck/datasource ds
               :sky-deck/auth {:person-id ivan-id}}))
 
+(defn create-session
+  [ds campaign-id]
+  (l/execute schema (graphql/graphql-query
+                      {:operation {:operation/type :mutation
+                                   :operation/name "create_session"}
+                       :variables [{:variable/name :$campaign_id
+                                    :variable/type :String!}]
+                       :queries [[:create_session {:campaign_id :$campaign_id} [:id]]]})
+             {:campaign_id campaign-id}
+             {:sky-deck/datasource ds
+              :sky-deck/auth       {:person-id ivan-id}}))
+
 (defn list-campaigns
   [ds]
   (l/execute schema (graphql/graphql-query {:queries [[:list_campaigns [:id :number :state [:dungeon_master [:id :username :email]]]]]})
@@ -106,6 +118,8 @@
   (sd.graphql/compile-dungeon-master-api)
 
   (create-campaign ds {:name "test"})
+
+  (create-session ds "Q2FtcGFpZ246NzAwYzhhMjYtMmU2ZC0xMWVhLThhYTMtOTc5YzhlYjllMThi")
 
 
   (list-campaigns ds)

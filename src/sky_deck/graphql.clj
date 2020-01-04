@@ -8,27 +8,11 @@
     [honeysql-postgres.format]
     [honeysql-postgres.helpers]
     [honeysql.core :as sql]
+    [sky-deck.global-id :as sd.global-id]
+    [sky-deck.node :as sd.node]
+    [sky-deck.queries :as sd.queries]
     [sky-deck.mutations :as sd.mutations])
   (:import (java.util Base64)))
-
-(defn- encode-id
-  [x]
-  (.encodeToString (Base64/getEncoder) (.getBytes x)))
-
-(defn- decode-id
-  [x]
-  (String. (.decode (Base64/getDecoder) x)))
-
-(defn to-global-id
-  [type id]
-  (encode-id (str/join ":" [(name type) id])))
-
-(defn from-global-id
-  [global-id]
-  (str/split (decode-id global-id) #":"))
-
-(comment
-  (sky-deck.graphql/to-global-id :Person #uuid"5072e832-2d86-11ea-b123-3f04c1c50b65"))
 
 (def shared-interfaces
   {:Node {:fields {:id {:type '(non-null ID)}}}})
@@ -37,7 +21,7 @@
   {:Person {:implements [:Node]
             :fields {:id {:type '(non-null ID)
                           :resolve (fn [_ _ value]
-                                     (to-global-id :Person (:person/id value)))}
+                                     (sd.global-id/to-global-id :Person (:person/id value)))}
                      :username {:type 'String
                                 :resolve (fn [_ _ value] (:person/username value))}
                      :email {:type 'String
@@ -58,7 +42,9 @@
                          :slug {:type 'String}}}
 
    :Session {:implements [:Node]
-             :fields {:id {:type '(non-null ID)}
+             :fields {:id {:type '(non-null ID)
+                           :resolve (fn [_ _ value]
+                                      (sd.global-id/to-global-id :Session (:campaign/id value)))}
                       :campaign {:type :Campaign}}}
 
    :Battle {:implements [:Node]
@@ -94,7 +80,7 @@
    :Campaign {:implements [:Node]
               :fields {:id {:type '(non-null ID)
                             :resolve (fn [_ _ value]
-                                       (to-global-id :Campaign (:campaign/id value)))}
+                                       (sd.global-id/to-global-id :Campaign (:campaign/id value)))}
                        :number {:type 'Int
                                 :resolve (fn [_ _ value]
                                            (:campaign/number value))}
@@ -104,13 +90,12 @@
                                                    (sky-deck.queries/person-by-id
                                                      datasource
                                                      (:campaign/dungeon_master_id value)))}
-
                        :players {:type '(list :Character)}}}
 
    :Character {:implements [:Node]
                :fields {:id {:type '(non-null ID)
                              :resolve (fn [_ _ value]
-                                        (to-global-id :Character (:character/id value)))}
+                                        (sd.global-id/to-global-id :Character (:character/id value)))}
                         :name {:type 'String}
                         :type {:type 'String}
                         :hit_point_max {:type 'Int}
@@ -134,17 +119,32 @@
   {:objects       shared-objects
    :interfaces    shared-interfaces
    :input-objects {}
-   :mutations     {:create_campaign {:type        :Campaign
-                                     :description ""
-                                     :args        {:name {:type 'String}}
-                                     :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
-                                                    (sd.mutations/add-campaign datasource {:campaign-inputs
-                                                                                           {:dungeon_master_id (:person-id auth)}}))}
-                   :create_npc_character {:type :Character
+   :mutations     {:create_campaign      {:type        :Campaign
                                           :description ""
-                                          :args {:name {:type 'String}}
-                                          :resolve (fn [{:sky-deck/keys [datasource auth]} args _]
-                                                     (sd.mutations/add-npc-character datasource {:character-inputs args}))}}
+                                          :args        {:name {:type 'String}}
+                                          :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
+                                                         (sd.mutations/add-campaign datasource {:campaign-inputs
+                                                                                                {:dungeon_master_id (:person-id auth)}}))}
+
+                   :create_session       {:type        :Session
+                                          :description ""
+                                          :args        {:campaign_id {:type 'String}}
+                                          :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
+                                                         (let [node (sd.node/node datasource (:campaign_id args))]
+                                                           (clojure.pprint/pprint [:node node :args args])
+
+                                                           (sd.mutations/add-session datasource {:session-inputs args})))}
+
+                   :create_battle        {:type        :Battle
+                                          :description ""
+                                          :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
+                                                         {:id "Battle"})}
+
+                   :create_npc_character {:type        :Character
+                                          :description ""
+                                          :args        {:name {:type 'String}}
+                                          :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
+                                                         (sd.mutations/add-npc-character datasource {:character-inputs args}))}}
 
    :queries       {:list_campaigns {:type    '(list :Campaign)
                                     :resolve (fn [{:sky-deck/keys [datasource auth]} args _]

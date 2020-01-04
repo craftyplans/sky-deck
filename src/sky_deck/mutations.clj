@@ -83,6 +83,10 @@
         :args (s/cat :session-args ::session-args)
         :ret map?)
 
+(defn add-session
+  [ds opts]
+  (db/execute-one-sql ds (generate-session opts)))
+
 (s/def ::name string?)
 (s/def ::background string?)
 (s/def ::hit_point_max number?)
@@ -161,6 +165,10 @@
                           :initiated_by_id initiated-by-id)]
    :returning [:*]})
 
+
+(defn add-battle
+  [ds opts]
+  (db/execute-one-sql ds (generate-battle opts)))
 
 (defn generate-round
   [{:keys [new-id battle-id campaign-id]}]

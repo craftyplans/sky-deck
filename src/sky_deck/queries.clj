@@ -55,5 +55,3 @@
   [ds campaign-id]
   (db/execute-sql ds {:select [:*]}))
 
-(defn node
-  [datasource global-id])

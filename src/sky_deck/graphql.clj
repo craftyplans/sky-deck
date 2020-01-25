@@ -44,7 +44,7 @@
    :Session {:implements [:Node]
              :fields {:id {:type '(non-null ID)
                            :resolve (fn [_ _ value]
-                                      (sd.global-id/to-global-id :Session (:campaign/id value)))}
+                                      (sd.global-id/to-global-id :Session (:session/id value)))}
                       :campaign {:type :Campaign}}}
 
    :Battle {:implements [:Node]
@@ -131,14 +131,16 @@
                                           :args        {:campaign_id {:type 'String}}
                                           :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
                                                          (let [node (sd.node/node datasource (:campaign_id args))]
-                                                           (clojure.pprint/pprint [:node node :args args])
-
-                                                           (sd.mutations/add-session datasource {:session-inputs args})))}
+                                                           (sd.mutations/add-session
+                                                             datasource
+                                                             {:campaign-id (:campaign/id node)})))}
 
                    :create_battle        {:type        :Battle
                                           :description ""
+                                          :args        {:session_id {:type 'String}}
                                           :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
-                                                         {:id "Battle"})}
+                                                         (let [node (sd.node/node datasource (:session_id args))]
+                                                           {:id "Battle"}))}
 
                    :create_npc_character {:type        :Character
                                           :description ""

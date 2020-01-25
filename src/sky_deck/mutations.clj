@@ -47,6 +47,7 @@
 
 (s/def ::description ::text)
 (s/def ::dungeon_master_id ::id)
+(s/def ::campaign-id ::id)
 
 (s/def ::campaign-inputs (s/keys :req-un [::dungeon_master_id]))
 

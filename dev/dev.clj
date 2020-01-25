@@ -88,6 +88,9 @@
              {:sky-deck/datasource ds
               :sky-deck/auth {:person-id ivan-id}}))
 
+
+"U2Vzc2lvbjpjMzM0YWY4ZS0yZjE4LTExZWEtYTE0YS1mYmM5ZmNmY2U3Njc="
+
 (defn create-session
   [ds campaign-id]
   (l/execute schema (graphql/graphql-query
@@ -95,8 +98,24 @@
                                    :operation/name "create_session"}
                        :variables [{:variable/name :$campaign_id
                                     :variable/type :String!}]
-                       :queries [[:create_session {:campaign_id :$campaign_id} [:id]]]})
+                       :queries [[:create_session {:campaign_id :$campaign_id} [:id [:campaign [:id]]]]]}
+
+                      )
              {:campaign_id campaign-id}
+             {:sky-deck/datasource ds
+              :sky-deck/auth       {:person-id ivan-id}}
+
+             ))
+
+(defn create-battle
+  [ds session-id]
+  (l/execute schema (graphql/graphql-query
+                      {:operation {:operation/type :mutation
+                                   :operation/name "create_battle"}
+                       :variables [{:variable/name :$campaign_id
+                                    :variable/type :String!}]
+                       :queries [[:create_session {:campaign_id :$campaign_id} [:id [:campaign [:id]]]]]})
+             {:session_id session-id}
              {:sky-deck/datasource ds
               :sky-deck/auth       {:person-id ivan-id}}))
 

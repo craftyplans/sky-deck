@@ -11,3 +11,8 @@ pom.xml
 .nrepl-port
 .cpcache/
 .rebel_readline_history
+/.idea/
+/node_modules/
+/resources/public/cljs-out/
+/resources/public/css/
+sky-deck.iml

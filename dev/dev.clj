@@ -3,10 +3,14 @@
             [puget.printer]
             [clojure.spec.alpha :as s]
             [expound.alpha :as expound]
+            [integrant.core :as ig]
+            [integrant.repl.state :as state]
+            [integrant.repl :as ig.repl]
             [orchestra.spec.test :as st]
             [sky-deck.mutations :as sd.mutations]
             [sky-deck.queries :as sky-deck.queries]
             [sky-deck.graphql :as sd.graphql]
+            [sky-deck.config :as config]
             [next.jdbc :as jdbc]
             [com.walmartlabs.lacinia :as l]
             [graphql-query.core :as graphql]
@@ -21,6 +25,19 @@
 (defonce taps (load-tap))
 
 (def dev-db {:dbtype "postgresql" :dbname "sky_deck_development"})
+
+(ig.repl/set-prep! #(config/new-system :development))
+
+(defn go [] (let [res (ig.repl/go) ctx state/system] res))
+
+
+
+
+
+
+
+
+
 
 (defn execute-map
   [ds sql-map]
@@ -59,10 +76,6 @@
 
 (def schema (sd.graphql/compile-dungeon-master-api))
 
-
-(defn execute-graphql
-  [ds ])
-
 (comment
 
   (graphql/graphql-query
@@ -98,14 +111,10 @@
                                    :operation/name "create_session"}
                        :variables [{:variable/name :$campaign_id
                                     :variable/type :String!}]
-                       :queries [[:create_session {:campaign_id :$campaign_id} [:id [:campaign [:id]]]]]}
-
-                      )
+                       :queries [[:create_session {:campaign_id :$campaign_id} [:id [:campaign [:id]]]]]})
              {:campaign_id campaign-id}
              {:sky-deck/datasource ds
-              :sky-deck/auth       {:person-id ivan-id}}
-
-             ))
+              :sky-deck/auth       {:person-id ivan-id}}))
 
 (defn create-battle
   [ds session-id]

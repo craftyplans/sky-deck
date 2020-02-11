@@ -1,1 +1,5 @@
-#:for-humans{}
+{:sky-deck/connection-uri "jdbc:postgresql://localhost/sky_deck_development"
+
+ :for-humans/migrations {:connection-uri #ref [:sky-deck/connection-uri]
+                         :migrations "migrations"}
+ :sky-deck/db {:connection-uri #ref [:sky-deck/connection-uri]}}

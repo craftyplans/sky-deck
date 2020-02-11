@@ -120,14 +120,14 @@
    :interfaces    shared-interfaces
    :input-objects {}
    :mutations     {:create_campaign      {:type        :Campaign
-                                          :description ""
+                                          :description "Creates a new campaign"
                                           :args        {:name {:type 'String}}
                                           :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
                                                          (sd.mutations/add-campaign datasource {:campaign-inputs
                                                                                                 {:dungeon_master_id (:person-id auth)}}))}
 
                    :create_session       {:type        :Session
-                                          :description ""
+                                          :description "Creates a new campaign session."
                                           :args        {:campaign_id {:type 'String}}
                                           :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
                                                          (let [node (sd.node/node datasource (:campaign_id args))]
@@ -136,14 +136,14 @@
                                                              {:campaign-id (:campaign/id node)})))}
 
                    :create_battle        {:type        :Battle
-                                          :description ""
+                                          :description "Create a new battle"
                                           :args        {:session_id {:type 'String}}
                                           :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
                                                          (let [node (sd.node/node datasource (:session_id args))]
                                                            {:id "Battle"}))}
 
                    :create_npc_character {:type        :Character
-                                          :description ""
+                                          :description "Creates a new NPC Character"
                                           :args        {:name {:type 'String}}
                                           :resolve     (fn [{:sky-deck/keys [datasource auth]} args _]
                                                          (sd.mutations/add-npc-character datasource {:character-inputs args}))}}

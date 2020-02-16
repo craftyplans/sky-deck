@@ -21,6 +21,8 @@
                  [org.postgresql/postgresql "42.2.8"]
                  [seancorfield/next.jdbc "1.0.10"]
                  [ragtime "0.8.0"]
+
+                 [io.lettuce/lettuce-core "5.2.2.RELEASE"]
                  [com.wsscode/pathom "2.2.28"]
 
                  [cambium/cambium.core         "0.9.3"]

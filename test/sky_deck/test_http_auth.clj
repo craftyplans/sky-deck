@@ -9,7 +9,10 @@
             [clojure.spec.gen.alpha :as gen]
             [ring.mock.request :as mock]
             [yada.yada :as yada]
-            [sky-deck.config :as sd.config]))
+            [byte-streams :as byte-streams]
+            [sky-deck.config :as sd.config]
+            [graphql-query.core :as graphql]
+            [clojure.java.io :as io]))
 
 (set! s/*explain-out* expound/printer)
 (st/instrument)
@@ -24,12 +27,6 @@
         system (ig/init (dissoc config :sky-deck/http-server))]
     system))
 
-(defn with-system-fn
-  [func]
-  (let [system (init-test-system!)]
-    (try (let [] (func))
-         (finally (ig/halt! system)))))
-
 (defmacro with-system
   [system-symbol & body]
   `(let [~system-symbol (init-test-system!)]
@@ -37,30 +34,40 @@
        (do ~@body)
        (finally (ig/halt! ~system-symbol)))))
 
+(def json-mapper (j/object-mapper {:decode-key-fn keyword}))
+
 (defn- request
-  [{::keys [system method route-uri params]}]
+  [{::keys [system method route-uri json-body]}]
   (let [handler (yada.handler/as-handler (:sky-deck/routes system))
         request (-> (mock/request method route-uri)
-                    (mock/json-body params))
-        response @(handler request)]
-    {:request request
-     :response response}))
+                    (mock/json-body json-body))]
+    {::request  request
+     ::response (when-let [response-defer (handler request)]
+                  (let [response @response-defer
+                        body (byte-streams/convert (:body response) String)
+                        body-data (j/read-value body json-mapper)]
+                    (assoc response :body body-data)))}))
+
+(defn- graphql-request
+  [{::keys [system graphql-query]}]
+  (request {::route-uri "/graphql"
+            ::json-body {}
+            ::system system}))
 
 (t/deftest test-create-person
   (with-system
     system
+    (let [session (request {::system system
+                            ::method :get
+                            ::route-uri "/"})]
+      (t/is (= {} session)))))
 
-    (let [session (request {::system system ::method :get ::route-uri "/login"})]
-      (t/is (false? true))
-      (t/is (= #{} (keys system)))
-      (t/is (= {} {})))))
-
-(t/deftest test-create-campaign
+#_(t/deftest test-create-campaign
   (let [])
   (t/is (false? true)))
 
-(t/deftest test-basic-auth
+#_(t/deftest test-basic-auth
   (t/is (false? true)))
 
-(t/deftest test-anonymous-character-create
+#_(t/deftest test-anonymous-character-create
   (t/is (false? true)))

@@ -75,9 +75,11 @@
   ["" [["/" (yada/resource
               {:id :sky-deck.resource/index
                :methods {:get {:produces "application/json"
+                               :consumes "application/json"
                                :response (fn [ctx] {:hello "world"})}}})
-        #_["/graphql" (generate-graphql options)]
+
         ["/login" (generate-login options)]
+
         [true (yada/handler nil)]]]])
 
 (defmethod ig/init-key :sky-deck/http-server

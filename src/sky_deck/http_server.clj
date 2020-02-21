@@ -18,7 +18,6 @@
                                         "Authorization"
                                         "Set-Cookie"]}})
 
-
 (def access-control-configuration
   {:access-control {:allow-origin      "*"
                     :allow-credentials true
@@ -32,6 +31,8 @@
                                                   :put    :person
                                                   :delete :person}}}})
 
+(defn generate-graphql-endpoint
+  [schema])
 
 (defn login
   [ctx request]
@@ -70,14 +71,20 @@
                      (merge cors-configuration))))
 
 (defmethod ig/init-key :sky-deck/routes
-  [_ _options]
-  ["" [[true (yada/handler nil)]]])
+  [_ options]
+  ["" [["/" (yada/resource
+              {:id :sky-deck.resource/index
+               :methods {:get {:produces "application/json"
+                               :response (fn [ctx] {:hello "world"})}}})
+        #_["/graphql" (generate-graphql options)]
+        ["/login" (generate-login options)]
+        [true (yada/handler nil)]]]])
 
 (defmethod ig/init-key :sky-deck/http-server
   [_ options]
   (let [server (yada/listener (:sky-deck/routes options)
                               {:port (Integer/parseInt (:port options))})]
-    (log/info {} "started-http-server")
+    (log/info {:options options} "started-http-server")
     server))
 
 (defmethod ig/halt-key! :sky-deck/http-server

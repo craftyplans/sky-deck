@@ -14,7 +14,8 @@
             [next.jdbc :as jdbc]
             [com.walmartlabs.lacinia :as l]
             [graphql-query.core :as graphql]
-            [honeysql.core :as sql]))
+            [honeysql.core :as sql]
+            [eftest.runner :as ef]))
 
 (set! s/*explain-out* expound/printer)
 (st/instrument)
@@ -30,6 +31,9 @@
 
 (defn go [] (let [res (ig.repl/go) ctx state/system] res))
 
+(defn run-tests
+  []
+  (ef/run-tests (ef/find-tests "test") {:report eftest.report.pretty/report}))
 
 
 

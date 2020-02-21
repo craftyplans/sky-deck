@@ -35,7 +35,7 @@
                  [bidi "2.1.6"]
 
                  [metosin/jsonista "0.2.3"]
-                 [aleph "0.4.6"]
+                 [aleph "0.4.7-alpha2"]
                  [com.cerner/clara-rules "0.19.1"]
 
                  [funcool/cuerdas "2.2.0"]

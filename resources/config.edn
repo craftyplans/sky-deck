@@ -2,4 +2,10 @@
 
  :for-humans/migrations {:connection-uri #ref [:sky-deck/connection-uri]
                          :migrations "migrations"}
- :sky-deck/db {:connection-uri #ref [:sky-deck/connection-uri]}}
+ :sky-deck/db {:connection-uri #ref [:sky-deck/connection-uri]}
+
+ :sky-deck/routes {}
+ :sky-deck/http-server {:port "5001"
+                        :sky-deck/routes #ig/ref :sky-deck/routes}
+
+ }

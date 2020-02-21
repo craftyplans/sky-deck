@@ -8,7 +8,9 @@
   [username]
   {:select [:*]
    :from [:person]
-   :where [:= :person.username username]})
+   :where [:or
+           [:= :person.username username]
+           [:= :person.email username]]})
 
 (defn generate-by-id
   [id]

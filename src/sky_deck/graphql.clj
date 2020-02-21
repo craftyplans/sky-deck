@@ -3,16 +3,12 @@
     [com.walmartlabs.lacinia.resolve :as lacinia-resolve]
     [com.walmartlabs.lacinia.util :as util]
     [com.walmartlabs.lacinia.schema :as schema]
-    [clojure.string :as str]
-    [next.jdbc :as jdbc]
-    [honeysql-postgres.format]
-    [honeysql-postgres.helpers]
-    [honeysql.core :as sql]
     [sky-deck.global-id :as sd.global-id]
     [sky-deck.node :as sd.node]
     [sky-deck.queries :as sd.queries]
-    [sky-deck.mutations :as sd.mutations])
-  (:import (java.util Base64)))
+    [sky-deck.mutations :as sd.mutations]
+    [cambium.core :as log]
+    [integrant.core :as ig]))
 
 (def shared-interfaces
   {:Node {:fields {:id {:type '(non-null ID)}}}})
@@ -166,3 +162,10 @@
    :mutations {:join_battle {}
                :create_account {}}
    :queries {}})
+
+(defmethod ig/init-key :sky-deck/graphql
+  [_ options]
+  (log/info {:options options} "sky-deck/graphql")
+  {:sky-deck/dungeon-master-schema (schema/compile dungeon-master-api-schema)
+   :sky-deck/player-schema {}
+   :sky-deck/anonymous-schema {}})

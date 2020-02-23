@@ -49,17 +49,35 @@
                     (assoc response :body body-data)))}))
 
 (defn- graphql-request
-  [{::keys [system graphql-query]}]
-  (request {::route-uri "/graphql"
-            ::json-body {}
+  [{::keys [system query variables]}]
+  (request {::route-uri "/anonymous-graphql"
+            ::method :post
+            ::json-body {:query (graphql/graphql-query query)
+                         :variables variables}
             ::system system}))
+
+(defn join-battle
+  [battle-id]
+  {:query {:operation {:operation/type :mutation
+                       :operation/name "join_battle"}
+           :variables [{:variable/name :$id
+                        :variable/type :ID!}]
+           :queries   [[:join_battle [:id]]]}
+   :variables {:id battle-id}})
 
 (t/deftest test-create-person
   (with-system
     system
     (let [session (request {::system system
                             ::method :get
-                            ::route-uri "/"})]
+                            ::route-uri "/"})
+
+          graphql-session (graphql-request {::system system
+                                            ::graphql-query {}
+                                            ::graphql-variables {}})
+
+          ]
+
       (t/is (= {} session)))))
 
 #_(t/deftest test-create-campaign

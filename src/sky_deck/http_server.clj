@@ -80,6 +80,10 @@
 
         ["/login" (generate-login options)]
 
+        ["/anonymous-graphql" (yada/handler {:hello "anonymous graphql"})]
+        ["/dungeon-master-graphql" (yada/handler {:hello "dungeon master graphql"})]
+        ["/authenticated-player-graphql" (yada/handler {:hello "auth player graphql"})]
+
         [true (yada/handler nil)]]]])
 
 (defmethod ig/init-key :sky-deck/http-server

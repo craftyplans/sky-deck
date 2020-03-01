@@ -1,5 +1,6 @@
 create type character_type as enum (
     'player',
+    'anonymous',
     'npc'
 );
 
@@ -9,21 +10,21 @@ create table character (
     updated_at timestamptz not null default clock_timestamp(),
     deleted_at timestamptz,
     name varchar(256),
-    actions int default 2,
+    actions bigint default 2,
     type character_type default 'player',
-    hit_point_max int,
-    hit_point_current int,
-    age int,
-    agility int,
-    strength int,
-    mind int,
-    soul int,
-    skill_points int,
-    reputation  int,
-    master_points int,
-    divinity_points int,
-    moments int,
-    past_lives int,
-    charges int,
+    hit_point_max bigint,
+    hit_point_current bigint,
+    age bigint,
+    agility bigint,
+    strength bigint,
+    mind bigint,
+    soul bigint,
+    skill_points bigint,
+    reputation  bigint,
+    master_points bigint,
+    divinity_points bigint,
+    moments bigint,
+    past_lives bigint,
+    charges bigint,
     background text
 )

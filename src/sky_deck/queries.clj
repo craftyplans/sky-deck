@@ -53,7 +53,23 @@
                    :from       [:campaign]
                    :where      [:= :campaign/dungeon_master_id dungeon-master-id]}))
 
+
+(defn campaign-by-battle
+  [ds battle]
+  (db/execute-one-sql ds
+                      {:select [:*]
+                       :from [:campaign]
+                       :where [:= :campaign/id (:battle/campaign_id battle)]}))
+
 (defn campaign-players
   [ds campaign-id]
   (db/execute-sql ds {:select [:*]}))
+
+(defn battle-by-number
+  [data-source battle-number]
+  (db/execute-one-sql data-source
+                      {:select [:*]
+                       :from [:battle]
+                       :where [:= :battle/number battle-number]}))
+
 

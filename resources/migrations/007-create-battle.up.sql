@@ -12,5 +12,6 @@ create table battle (
     state battle_state default 'started',
     initiated_by_id uuid references character,
     session_id uuid references session,
+    max_anonymous_characters int default 10,
     campaign_id uuid references campaign
 )

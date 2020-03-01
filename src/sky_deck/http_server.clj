@@ -31,9 +31,6 @@
                                                   :put    :person
                                                   :delete :person}}}})
 
-(defn generate-graphql-endpoint
-  [schema])
-
 (defn login
   [ctx request]
   (let [parameters (get-in request [:parameters :body])
@@ -70,21 +67,45 @@
                                        :response   (partial login ctx)}}}
                      (merge cors-configuration))))
 
+(defn generate-graphql-endpoint
+  [schema context]
+  (-> {:id :sky-deck.resource/graphql-endpoint
+       :methods {:post {:consumes "application/json"
+                        :produces "application/json"
+                        :response (fn [request]
+                                    (let [body (:body request)
+                                          query (:query body)
+                                          variables (if (string? (:variables body))
+                                                      (j/read-value (:variables body)
+                                                                    (j/object-mapper
+                                                                      {:decode-key-fn keyword}))
+                                                      (:variables body))
+                                          response (lacinia/execute
+                                                     schema
+                                                     query
+                                                     variables
+                                                     (assoc context
+                                                       :com.walmartlabs.lacinia/enable-timing?
+                                                       true))]
+                                      (dissoc response :extensions)))}}}
+      (yada/resource)))
+
 (defmethod ig/init-key :sky-deck/routes
   [_ options]
   ["" [["/" (yada/resource
               {:id :sky-deck.resource/index
                :methods {:get {:produces "application/json"
                                :consumes "application/json"
-                               :response (fn [ctx] {:hello "world"})}}})
+                               :response (fn [ctx] {:hello "world"})}}})]
 
         ["/login" (generate-login options)]
+        ["/anonymous-graphql" (generate-graphql-endpoint
+                                (get-in options [:graphql :sky-deck/anonymous-schema]) options)]
 
-        ["/anonymous-graphql" (yada/handler {:hello "anonymous graphql"})]
         ["/dungeon-master-graphql" (yada/handler {:hello "dungeon master graphql"})]
         ["/authenticated-player-graphql" (yada/handler {:hello "auth player graphql"})]
 
-        [true (yada/handler nil)]]]])
+        [true (yada/handler nil)]]])
 
 (defmethod ig/init-key :sky-deck/http-server
   [_ options]

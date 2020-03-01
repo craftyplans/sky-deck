@@ -7,11 +7,17 @@
     [sky-deck.node :as sd.node]
     [sky-deck.queries :as sd.queries]
     [sky-deck.mutations :as sd.mutations]
+    [sky-deck.resolvers :as sd.resolvers]
     [cambium.core :as log]
     [integrant.core :as ig]))
 
 (def shared-interfaces
   {:Node {:fields {:id {:type '(non-null ID)}}}})
+
+(defn resolve-keyword
+  [keyword]
+  (fn [_ _ value]
+    (keyword value)))
 
 (def shared-objects
   {:Person {:implements [:Node]
@@ -44,11 +50,20 @@
                       :campaign {:type :Campaign}}}
 
    :Battle {:implements [:Node]
-            :fields {:id {:type '(non-null ID)}
-                     :number {:type 'Int}
+            :fields {:id {:type '(non-null ID)
+                          :resolve (fn [_ _ value]
+                                     (sd.global-id/to-global-id :Battle (:battle/id value)))}
+                     :number {:type 'Int
+                              :resolve (resolve-keyword :battle/number)}
+                     :created_at {:type 'String
+                                  :resolve (resolve-keyword :battle/created_at)}
+                     :updated_at {:type 'String
+                                  :resolve (resolve-keyword :battle/updated_at)}
                      :state {:type 'String}
                      :session {:type :Session}
-                     :campaign {:type :Campaign}
+                     :campaign {:type :Campaign
+                                :resolve (fn [ctx attrs value]
+                                           (sd.resolvers/find-campaign-by-battle ctx attrs value))}
                      :participants {:type '(list :Character)}}}
 
    :Round {:implements [:Node]
@@ -92,15 +107,21 @@
                :fields {:id {:type '(non-null ID)
                              :resolve (fn [_ _ value]
                                         (sd.global-id/to-global-id :Character (:character/id value)))}
-                        :name {:type 'String}
-                        :type {:type 'String}
+                        :name {:type 'String
+                               :resolve (resolve-keyword :character/name)}
+                        :type {:type 'String
+                               :resolve (resolve-keyword :character/type)}
                         :hit_point_max {:type 'Int}
                         :hit_point_current {:type 'Int}
                         :age {:type 'Int}
-                        :agility {:type 'Int}
-                        :strength {:type 'Int}
-                        :mind {:type 'Int}
-                        :soul {:type 'Int}
+                        :agility {:type 'Int
+                                  :resolve (resolve-keyword :character/agility)}
+                        :strength {:type 'Int
+                                   :resolve (resolve-keyword :character/strength)}
+                        :mind {:type 'Int
+                               :resolve (resolve-keyword :character/mind)}
+                        :soul {:type 'Int
+                               :resolve (resolve-keyword :character/soul)}
                         :skill_points {:type 'Int}
                         :reputation {:type 'Int}
                         :master_points {:type 'Int}
@@ -159,13 +180,24 @@
   {:objects shared-objects
    :interfaces shared-interfaces
    :input-objects {}
-   :mutations {:join_battle {}
-               :create_account {}}
-   :queries {}})
+   :mutations {:join_battle {:type :Character
+                             :description "Join an battle anonymously. Creates an anonymous character."
+                             :args {:number {:type 'Int}}
+                             :resolve (fn [ctx attrs value]
+                                        ;; Leave wrapper function to help with reload
+                                        (sd.resolvers/anonymously-join-battle ctx attrs value))}
+               :create_account {:type :Person
+                                :resolve (fn [_ctx _attrs value]
+                                           (println "create account" value))}}
+   :queries {:find_battle {:type :Battle
+                           :description ""
+                           :args {:number {:type 'Int}}
+                           :resolve (fn [ctx attrs value]
+                                      (sd.resolvers/resolve-battle ctx attrs value))}}})
 
 (defmethod ig/init-key :sky-deck/graphql
   [_ options]
   (log/info {:options options} "sky-deck/graphql")
   {:sky-deck/dungeon-master-schema (schema/compile dungeon-master-api-schema)
    :sky-deck/player-schema {}
-   :sky-deck/anonymous-schema {}})
+   :sky-deck/anonymous-schema (schema/compile anonymous-api-schema)})

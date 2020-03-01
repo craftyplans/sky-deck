@@ -6,7 +6,7 @@ create table person (
     username varchar(256),
     email varchar(256),
     password text,
-    enabled boolean default true,
+    enabled boolean default false,
     unique (email),
     unique (username)
 )

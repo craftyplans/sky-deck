@@ -105,7 +105,12 @@
                  :soul]]]})
 
 (def battle-attributes
-  [:id :number :created_at :updated_at [:campaign [:id]]])
+  [:id
+   :number
+   :created_at
+   :updated_at
+   [:participants [:id :name :soul :mind :strength]]
+   [:campaign [:id]]])
 
 (defn find-battle-by-number
   []
@@ -141,16 +146,23 @@
         session (sd.mutations/generate-session {:new-id session-id
                                                 :campaign-id campaign-id})
 
-        battle (sd.mutations/generate-battle {:campaign-id campaign-id
+        battle-id (sd.mutations/new-id)
+        battle (sd.mutations/generate-battle {:new-id battle-id
+                                              :campaign-id campaign-id
                                               :session-id session-id
-                                              :initiated-by-id character-id})]
+                                              :initiated-by-id character-id})
+
+        battle-participant (sd.mutations/generate-battle-participant
+                             {:battle-id battle-id
+                              :character-id character-id})]
 
     ;; This is kind of lame. Order is important!
     {::default-person person
      ::default-character character
      ::default-campaign default-campaign
      ::default-session session
-     ::default-battle battle}))
+     ::default-battle battle
+     ::participant battle-participant}))
 
 (defn init-db
   [system]

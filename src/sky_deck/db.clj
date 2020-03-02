@@ -13,7 +13,9 @@
 
 (defn execute-sql
   [ds sql-map]
-  (next.jdbc/execute! ds (sql/format sql-map)))
+  (let [sql-str (sql/format sql-map)]
+    (log/info {:sql-str sql-str} "execute-sql")
+    (next.jdbc/execute! ds sql-str)))
 
 (defmethod ig/init-key :sky-deck/db
   [_ options]

@@ -30,6 +30,11 @@
   (with-open [connection (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db ctx)))]
     (sd.queries/campaign-by-battle connection value)))
 
+(defn find-participants
+  [ctx attrs value]
+  (with-open [conn (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db ctx)))]
+    (sd.queries/participants conn value)))
+
 ;; find battle,
 ;; create new default character with random name
 ;; associates that character with the current battle
@@ -42,7 +47,6 @@
 
 (defn anonymously-join-battle
   [ctx attrs value]
-
   (let [data-source (jdbc/get-datasource (:sky-deck/db ctx))]
     (with-open [connection (jdbc/get-connection data-source)]
       (let [battle (sd.queries/battle-by-number connection (:number attrs))

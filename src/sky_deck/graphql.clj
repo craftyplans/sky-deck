@@ -20,117 +20,119 @@
     (keyword value)))
 
 (def shared-objects
-  {:Person {:implements [:Node]
-            :fields {:id {:type '(non-null ID)
-                          :resolve (fn [_ _ value]
-                                     (sd.global-id/to-global-id :Person (:person/id value)))}
-                     :username {:type 'String
-                                :resolve (fn [_ _ value] (:person/username value))}
-                     :email {:type 'String
-                             :resolve (fn [_ _ value] (:person/email value))}}}
+  {:Person     {:implements [:Node]
+                :fields     {:id       {:type    '(non-null ID)
+                                        :resolve (fn [_ _ value]
+                                                   (sd.global-id/to-global-id :Person (:person/id value)))}
+                             :username {:type    'String
+                                        :resolve (fn [_ _ value] (:person/username value))}
+                             :email    {:type    'String
+                                        :resolve (fn [_ _ value] (:person/email value))}}}
 
-   :Viewer {:implements [:Node]
-            :fields {:id {:type '(non-null ID)}}}
+   :Viewer     {:implements [:Node]
+                :fields     {:id {:type '(non-null ID)}}}
 
-   :Arc {:implements [:Node]
-         :fields {:id {:type '(non-null ID)}
-                  :name {:type 'String}
-                  :description {:type 'String}
-                  :campaign {:type :Campaign}}}
+   :Arc        {:implements [:Node]
+                :fields     {:id          {:type '(non-null ID)}
+                             :name        {:type 'String}
+                             :description {:type 'String}
+                             :campaign    {:type :Campaign}}}
 
    :ActionType {:implements [:Node]
-                :fields {:id {:type '(non-null ID)}
-                         :name {:type 'String}
-                         :slug {:type 'String}}}
+                :fields     {:id   {:type '(non-null ID)}
+                             :name {:type 'String}
+                             :slug {:type 'String}}}
 
-   :Session {:implements [:Node]
-             :fields {:id {:type '(non-null ID)
-                           :resolve (fn [_ _ value]
-                                      (sd.global-id/to-global-id :Session (:session/id value)))}
-                      :campaign {:type :Campaign}}}
+   :Session    {:implements [:Node]
+                :fields     {:id       {:type    '(non-null ID)
+                                        :resolve (fn [_ _ value]
+                                                   (sd.global-id/to-global-id :Session (:session/id value)))}
+                             :campaign {:type :Campaign}}}
 
-   :Battle {:implements [:Node]
-            :fields {:id {:type '(non-null ID)
-                          :resolve (fn [_ _ value]
-                                     (sd.global-id/to-global-id :Battle (:battle/id value)))}
-                     :number {:type 'Int
-                              :resolve (resolve-keyword :battle/number)}
-                     :created_at {:type 'String
-                                  :resolve (resolve-keyword :battle/created_at)}
-                     :updated_at {:type 'String
-                                  :resolve (resolve-keyword :battle/updated_at)}
-                     :state {:type 'String}
-                     :session {:type :Session}
-                     :campaign {:type :Campaign
-                                :resolve (fn [ctx attrs value]
-                                           (sd.resolvers/find-campaign-by-battle ctx attrs value))}
-                     :participants {:type '(list :Character)}}}
+   :Battle     {:implements [:Node]
+                :fields     {:id           {:type    '(non-null ID)
+                                            :resolve (fn [_ _ value]
+                                                       (sd.global-id/to-global-id :Battle (:battle/id value)))}
+                             :number       {:type    'Int
+                                            :resolve (resolve-keyword :battle/number)}
+                             :created_at   {:type    'String
+                                            :resolve (resolve-keyword :battle/created_at)}
+                             :updated_at   {:type    'String
+                                            :resolve (resolve-keyword :battle/updated_at)}
+                             :state        {:type 'String}
+                             :session      {:type :Session}
+                             :campaign     {:type    :Campaign
+                                            :resolve (fn [ctx attrs value]
+                                                       (sd.resolvers/find-campaign-by-battle ctx attrs value))}
+                             :participants {:type    '(list :Character)
+                                            :resolve (fn [ctx attrs value]
+                                                       (sd.resolvers/find-participants ctx attrs value))}}}
 
-   :Round {:implements [:Node]
-           :fields {:id {:type '(non-null ID)}
-                    :state {:type 'String}
-                    :battle {:type :Battle}
-                    :campaign {:type :Campaign}
-                    :hands {:type '(list :Hand)}}}
+   :Round      {:implements [:Node]
+                :fields     {:id       {:type '(non-null ID)}
+                             :state    {:type 'String}
+                             :battle   {:type :Battle}
+                             :campaign {:type :Campaign}
+                             :hands    {:type '(list :Hand)}}}
 
-   :Hand {:implements [:Node]
-          :fields {:id {:type '(non-null ID)}
-                   :round {:type :Round}
-                   :character {:type :Character}
-                   :battle {:type :Battle}
-                   :state {:type 'String}}}
+   :Hand       {:implements [:Node]
+                :fields     {:id        {:type '(non-null ID)}
+                             :round     {:type :Round}
+                             :character {:type :Character}
+                             :battle    {:type :Battle}
+                             :state     {:type 'String}}}
 
-   :HandAction {:implements [:Node]
-                :fields {:id {:type '(non-null ID)}
-                         :hand {:type :Hand}
-                         :action_type {:type :ActionType}
-                         :target {:type :Character}}}
+   :Action     {:implements [:Node]
+                :fields     {:id          {:type '(non-null ID)}
+                             :hand        {:type :Hand}
+                             :action_type {:type :ActionType}
+                             :target      {:type :Character}}}
 
    ;; TODO (Ivan) Figure out better way of mapping namespaced keywords to graphql
    ;; Also, how do we use pathom
-   :Campaign {:implements [:Node]
-              :fields {:id {:type '(non-null ID)
-                            :resolve (fn [_ _ value]
-                                       (sd.global-id/to-global-id :Campaign (:campaign/id value)))}
-                       :number {:type 'Int
-                                :resolve (fn [_ _ value]
-                                           (:campaign/number value))}
-                       :state {:type 'String}
-                       :dungeon_master {:type :Person
-                                        :resolve (fn [{:sky-deck/keys [datasource auth]} _ value]
-                                                   (sky-deck.queries/person-by-id
-                                                     datasource
-                                                     (:campaign/dungeon_master_id value)))}
-                       :players {:type '(list :Character)}}}
+   :Campaign   {:implements [:Node]
+                :fields     {:id             {:type    '(non-null ID)
+                                              :resolve (fn [_ _ value]
+                                                         (sd.global-id/to-global-id :Campaign (:campaign/id value)))}
+                             :number         {:type    'Int
+                                              :resolve (fn [_ _ value]
+                                                         (:campaign/number value))}
+                             :state          {:type 'String}
+                             :dungeon_master {:type    :Person
+                                              :resolve (fn [{:sky-deck/keys [datasource auth]} _ value]
+                                                         (sky-deck.queries/person-by-id
+                                                           datasource
+                                                           (:campaign/dungeon_master_id value)))}
+                             :players        {:type '(list :Character)}}}
 
-   :Character {:implements [:Node]
-               :fields {:id {:type '(non-null ID)
-                             :resolve (fn [_ _ value]
-                                        (sd.global-id/to-global-id :Character (:character/id value)))}
-                        :name {:type 'String
-                               :resolve (resolve-keyword :character/name)}
-                        :type {:type 'String
-                               :resolve (resolve-keyword :character/type)}
-                        :hit_point_max {:type 'Int}
-                        :hit_point_current {:type 'Int}
-                        :age {:type 'Int}
-                        :agility {:type 'Int
-                                  :resolve (resolve-keyword :character/agility)}
-                        :strength {:type 'Int
-                                   :resolve (resolve-keyword :character/strength)}
-                        :mind {:type 'Int
-                               :resolve (resolve-keyword :character/mind)}
-                        :soul {:type 'Int
-                               :resolve (resolve-keyword :character/soul)}
-                        :skill_points {:type 'Int}
-                        :reputation {:type 'Int}
-                        :master_points {:type 'Int}
-                        :divinity_points {:type 'Int}
-                        :moments {:type 'Int}
-                        :past_lives {:type 'Int}
-                        :charges {:type 'Int}
-                        :background {:type 'String}
-                        :action_types {:type '(list :ActionType)}}}})
+   :Character  {:implements [:Node]
+                :fields     {:id                {:type    '(non-null ID)
+                                                 :resolve (fn [_ _ value]
+                                                            (sd.global-id/to-global-id :Character (:character/id value)))}
+                             :name              {:type    'String
+                                                 :resolve (resolve-keyword :character/name)}
+                             :type              {:type    'String
+                                                 :resolve (resolve-keyword :character/type)}
+                             :hit_point_max     {:type 'Int}
+                             :hit_point_current {:type 'Int}
+                             :age               {:type 'Int}
+                             :agility           {:type    'Int
+                                                 :resolve (resolve-keyword :character/agility)}
+                             :strength          {:type    'Int
+                                                 :resolve (resolve-keyword :character/strength)}
+                             :mind              {:type    'Int
+                                                 :resolve (resolve-keyword :character/mind)}
+                             :soul              {:type    'Int
+                                                 :resolve (resolve-keyword :character/soul)}
+                             :skill_points      {:type 'Int}
+                             :reputation        {:type 'Int}
+                             :master_points     {:type 'Int}
+                             :divinity_points   {:type 'Int}
+                             :moments           {:type 'Int}
+                             :past_lives        {:type 'Int}
+                             :charges           {:type 'Int}
+                             :background        {:type 'String}
+                             :action_types      {:type '(list :ActionType)}}}})
 
 (def dungeon-master-api-schema
   {:objects       shared-objects
@@ -177,27 +179,27 @@
   {:objects shared-objects})
 
 (def anonymous-api-schema
-  {:objects shared-objects
-   :interfaces shared-interfaces
+  {:objects       shared-objects
+   :interfaces    shared-interfaces
    :input-objects {}
-   :mutations {:join_battle {:type :Character
-                             :description "Join an battle anonymously. Creates an anonymous character."
-                             :args {:number {:type 'Int}}
-                             :resolve (fn [ctx attrs value]
-                                        ;; Leave wrapper function to help with reload
-                                        (sd.resolvers/anonymously-join-battle ctx attrs value))}
-               :create_account {:type :Person
-                                :resolve (fn [_ctx _attrs value]
-                                           (println "create account" value))}}
-   :queries {:find_battle {:type :Battle
-                           :description ""
-                           :args {:number {:type 'Int}}
-                           :resolve (fn [ctx attrs value]
-                                      (sd.resolvers/resolve-battle ctx attrs value))}}})
+   :mutations     {:join_battle    {:type        :Character
+                                    :description "Join an battle anonymously. Creates an anonymous character."
+                                    :args        {:number {:type 'Int}}
+                                    :resolve     (fn [ctx attrs value]
+                                                   ;; Leave wrapper function to help with reload
+                                                   (sd.resolvers/anonymously-join-battle ctx attrs value))}
+                   :create_account {:type    :Person
+                                    :resolve (fn [_ctx _attrs value]
+                                               (println "create account" value))}}
+   :queries       {:find_battle {:type        :Battle
+                                 :description ""
+                                 :args        {:number {:type 'Int}}
+                                 :resolve     (fn [ctx attrs value]
+                                                (sd.resolvers/resolve-battle ctx attrs value))}}})
 
 (defmethod ig/init-key :sky-deck/graphql
   [_ options]
   (log/info {:options options} "sky-deck/graphql")
   {:sky-deck/dungeon-master-schema (schema/compile dungeon-master-api-schema)
-   :sky-deck/player-schema {}
-   :sky-deck/anonymous-schema (schema/compile anonymous-api-schema)})
+   :sky-deck/player-schema         {}
+   :sky-deck/anonymous-schema      (schema/compile anonymous-api-schema)})

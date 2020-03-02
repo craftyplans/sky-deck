@@ -10,9 +10,7 @@
                  [re-frame "0.11.0-rc3"]
                  [re-graph "0.1.11"]
                  [io.lettuce/lettuce-core "5.2.1.RELEASE"]
-
                  [medley "1.2.0"]
-
                  [aero "1.1.3"]
 
                  [metosin/porsas "0.0.1-alpha13"]

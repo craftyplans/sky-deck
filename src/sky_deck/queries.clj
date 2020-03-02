@@ -4,6 +4,29 @@
             [porsas.next]
             [sky-deck.db :as db]))
 
+(def character-attributes
+  [:character.id
+   :character.created_at
+   :character.updated_at
+   :character.name
+   :character.actions
+   :character.type
+   :character.hit_point_max
+   :character.hit_point_current
+   :character.age
+   :character.agility
+   :character.strength
+   :character.mind
+   :character.soul
+   :character.skill_points
+   :character.reputation
+   :character.master_points
+   :character.divinity_points
+   :character.moments
+   :character.past_lives
+   :character.charges
+   :character.background])
+
 (defn generate-by-username
   [username]
   {:select [:*]
@@ -72,4 +95,12 @@
                        :from [:battle]
                        :where [:= :battle/number battle-number]}))
 
-
+(defn participants
+  [data-source battle]
+  (db/execute-sql data-source
+                  {:select character-attributes
+                   :from [:battle_participant]
+                   :where [:= :battle_participant.battle_id (:battle/id battle)]
+                   :left-join [:character [:=
+                                           :character.id
+                                           :battle_participant.character_id]]}))

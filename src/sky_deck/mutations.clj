@@ -13,16 +13,12 @@
 (defn transact-map
   [{:keys [:sky-deck/db]} tx-data]
   ;; Just do this for now, it will not scale.
-  (jdbc/with-transaction
-    [tx db]
-    (->>
-      (for [[key insert-sql] tx-data]
-        [key (db/execute-one-sql tx insert-sql)])
-      (into {}))))
+  (jdbc/with-transaction [tx db]
+                         (->> (for [[key insert-sql] tx-data]
+                                [key (db/execute-one-sql tx insert-sql)])
+                              (into {}))))
 
-(defn new-id
-  []
-  (UUID/randomUUID))
+(defn new-id [] (UUID/randomUUID))
 
 (s/def ::id uuid?)
 
@@ -39,22 +35,20 @@
                    ::email
                    ::password]))
 
-(s/def ::person-args
-  (s/keys :req-un [::person-inputs]
-          :opt-un [::new-id]))
+(s/def ::person-args (s/keys :req-un [::person-inputs] :opt-un [::new-id]))
 
 (defn generate-person
   [{:keys [new-id person-inputs]
     :as   _person-args}]
   {:insert-into :person
-   :values      [(m/assoc-some
-                   (update person-inputs :password hashers/derive)
-                   :id new-id)]
+   :values      [(m/assoc-some (update person-inputs :password hashers/derive)
+                               :id
+                               new-id)]
    :returning   [:*]})
 
 (s/fdef generate-person
-        :args (s/cat :person-args ::person-args)
-        :ret map?)
+  :args (s/cat :person-args ::person-args)
+  :ret map?)
 
 (s/def ::description ::text)
 (s/def ::dungeon_master_id ::id)
@@ -62,9 +56,7 @@
 
 (s/def ::campaign-inputs (s/keys :req-un [::dungeon_master_id]))
 
-(s/def ::campaign-args
-  (s/keys :req-un [::campaign-inputs]
-          :opt-un [::new-id]))
+(s/def ::campaign-args (s/keys :req-un [::campaign-inputs] :opt-un [::new-id]))
 
 (defn generate-campaign
   [{:keys [new-id campaign-inputs]
@@ -74,15 +66,12 @@
    :returning   [:*]})
 
 (s/fdef generate-campaign
-        :args (s/cat :campaign-args ::campaign-args)
-        :ret map?)
+  :args (s/cat :campaign-args ::campaign-args)
+  :ret map?)
 
-(defn add-campaign
-  [ds opts]
-  (db/execute-one-sql ds (generate-campaign opts)))
+(defn add-campaign [ds opts] (db/execute-one-sql ds (generate-campaign opts)))
 
-(s/def ::session-args (s/keys :req-un [::campaign-id]
-                              :opt-un [::new-id]))
+(s/def ::session-args (s/keys :req-un [::campaign-id] :opt-un [::new-id]))
 
 (defn generate-session
   [{:keys [new-id campaign-id]
@@ -92,12 +81,10 @@
    :returning   [:*]})
 
 (s/fdef generate-session
-        :args (s/cat :session-args ::session-args)
-        :ret map?)
+  :args (s/cat :session-args ::session-args)
+  :ret map?)
 
-(defn add-session
-  [ds opts]
-  (db/execute-one-sql ds (generate-session opts)))
+(defn add-session [ds opts] (db/execute-one-sql ds (generate-session opts)))
 
 (s/def ::name string?)
 (s/def ::background string?)
@@ -133,8 +120,7 @@
           :opt-un [::type ::background]))
 
 (s/def ::character-args
-  (s/keys :req-un [::character-inputs]
-          :opt-un [::new-id]))
+  (s/keys :req-un [::character-inputs] :opt-un [::new-id]))
 
 (defn generate-character
   [{:keys [new-id character-inputs]}]
@@ -147,8 +133,8 @@
    :returning   [:*]})
 
 (s/fdef generate-character
-        :args (s/cat :character-args ::character-args)
-        :ret map?)
+  :args (s/cat :character-args ::character-args)
+  :ret map?)
 
 (defn generate-anonymous-character
   [opts]
@@ -157,8 +143,7 @@
 
 (defn add-anonymous-character
   [data-source opts]
-  (db/execute-one-sql data-source
-                      (generate-character opts)))
+  (db/execute-one-sql data-source (generate-character opts)))
 
 (defn add-npc-character
   [ds opts]
@@ -166,8 +151,8 @@
 
 (s/def ::action-type-inputs (s/keys :req-un [::name ::slug]))
 
-(s/def ::action-type-args (s/keys :req-un [::action-type-inputs]
-                                  :opt-un [::new-id]))
+(s/def ::action-type-args
+  (s/keys :req-un [::action-type-inputs] :opt-un [::new-id]))
 
 (defn generate-action-type
   [{:keys [new-id action-type-inputs]}]
@@ -176,7 +161,7 @@
    :returning   [:*]})
 
 (s/fdef generate-action-type
-        :args (s/cat ::action-type ::action-type-args))
+  :args (s/cat ::action-type ::action-type-args))
 
 (defn generate-battle
   [{:keys [new-id campaign-id session-id initiated-by-id]}]
@@ -187,9 +172,7 @@
                                :initiated_by_id initiated-by-id)]
    :returning   [:*]})
 
-(defn add-battle
-  [ds opts]
-  (db/execute-one-sql ds (generate-battle opts)))
+(defn add-battle [ds opts] (db/execute-one-sql ds (generate-battle opts)))
 
 (defn generate-round
   [{:keys [new-id battle-id campaign-id]}]
@@ -212,8 +195,9 @@
 (s/def ::battle-id ::id)
 (s/def ::state #{"open" "closed"})
 
-(s/def ::hand-args (s/keys :req-un [::round-id ::character-id ::battle-id]
-                           :opt-un [::state ::new-id]))
+(s/def ::hand-args
+  (s/keys :req-un [::round-id ::character-id ::battle-id]
+          :opt-un [::state ::new-id]))
 
 (defn generate-hand
   [{:keys [new-id round-id character-id battle-id state]}]
@@ -226,8 +210,8 @@
    :returning   [:*]})
 
 (s/fdef generate-hand
-        :args (s/cat :hand-args ::hand-args)
-        :ret map?)
+  :args (s/cat :hand-args ::hand-args)
+  :ret map?)
 
 (defn generate-battle-participant
   [{:keys [battle-id character-id]}]
@@ -242,4 +226,3 @@
    :values      [{:character_id character-id
                   :campaign_id  campaign-id}]
    :returning   [:*]})
-

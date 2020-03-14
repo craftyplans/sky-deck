@@ -1,16 +1,10 @@
-{:sky-deck/connection-uri "jdbc:postgresql://localhost/sky_deck_development"
-
- :for-humans/migrations {:connection-uri #ref [:sky-deck/connection-uri]
-                         :migrations "migrations"}
-
- :sky-deck/db {:dbtype "postgresql" :dbname "sky_deck_development"}
-
-
- :sky-deck/graphql {}
- :sky-deck/routes {:graphql #ig/ref :sky-deck/graphql
-                   :sky-deck/db #ig/ref :sky-deck/db}
-
- :sky-deck/http-server {:port "5001"
-                        :sky-deck/routes #ig/ref :sky-deck/routes}
-
- }
+{:for-humans/migrations   {:connection-uri #ref [:sky-deck/connection-uri]
+                           :migrations     "migrations"}
+ :sky-deck/connection-uri "jdbc:postgresql://localhost/sky_deck_development"
+ :sky-deck/db             {:dbname "sky_deck_development"
+                           :dbtype "postgresql"}
+ :sky-deck/graphql        {}
+ :sky-deck/http-server    {:port            "5001"
+                           :sky-deck/routes #ig/ref :sky-deck/routes}
+ :sky-deck/routes         {:graphql     #ig/ref :sky-deck/graphql
+                           :sky-deck/db #ig/ref :sky-deck/db}}

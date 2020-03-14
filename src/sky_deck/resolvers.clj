@@ -22,17 +22,20 @@
 
 (defn resolve-battle
   [ctx attrs _value]
-  (with-open [connection (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db ctx)))]
+  (with-open [connection (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db
+                                                                    ctx)))]
     (sd.queries/battle-by-number connection (:number attrs))))
 
 (defn find-campaign-by-battle
   [ctx _attrs value]
-  (with-open [connection (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db ctx)))]
+  (with-open [connection (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db
+                                                                    ctx)))]
     (sd.queries/campaign-by-battle connection value)))
 
 (defn find-participants
   [ctx attrs value]
-  (with-open [conn (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db ctx)))]
+  (with-open [conn (jdbc/get-connection (jdbc/get-datasource (:sky-deck/db
+                                                              ctx)))]
     (sd.queries/participants conn value)))
 
 ;; find battle,
@@ -42,8 +45,7 @@
 ;; and campaign-player
 ;; returns character to client.
 
-(defn lookup-battle
-  [ctx attrs _value])
+(defn lookup-battle [ctx attrs _value])
 
 (defn anonymously-join-battle
   [ctx attrs value]
@@ -52,16 +54,17 @@
       (let [battle (sd.queries/battle-by-number connection (:number attrs))
             campaign-id (:battle/campaign_id battle)
             character-id (sd.mutations/new-id)
-            tx-data {:character (sd.mutations/generate-anonymous-character
-                                  (assoc default-character-stats :new-id character-id))
-                     :participant (sd.mutations/generate-battle-participant
-                                    {:battle-id    (:battle/id battle)
-                                     :character-id character-id})
+            tx-data {:character       (sd.mutations/generate-anonymous-character
+                                       (assoc default-character-stats
+                                              :new-id
+                                              character-id))
+                     :participant     (sd.mutations/generate-battle-participant
+                                       {:battle-id    (:battle/id battle)
+                                        :character-id character-id})
                      :campaign-player (sd.mutations/generate-campaign-player
-                                        {:character-id character-id
-                                         :campaign-id  campaign-id})}
+                                       {:character-id character-id
+                                        :campaign-id  campaign-id})}
             new-objects (sd.mutations/transact-map ctx tx-data)]
         (:character new-objects)))))
 
-(defn claim-anonymous-character
-  [ctx attrs value])
+(defn claim-anonymous-character [ctx attrs value])

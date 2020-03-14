@@ -17,10 +17,6 @@
     (log/info {:sql-str sql-str} "execute-sql")
     (next.jdbc/execute! ds sql-str)))
 
-(defmethod ig/init-key :sky-deck/db
-  [_ options]
-  options)
+(defmethod ig/init-key :sky-deck/db [_ options] options)
 
-(defmethod ig/init-key :sky-deck/connection-uri
-  [_ options]
-  options)
+(defmethod ig/init-key :sky-deck/connection-uri [_ options] options)

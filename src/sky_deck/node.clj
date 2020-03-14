@@ -5,10 +5,11 @@
 
 (defmulti node-by-id (fn [type id] type))
 
-(defmethod node-by-id :Campaign [type id]
+(defmethod node-by-id :Campaign
+  [type id]
   {:select [:*]
-   :from [:campaign]
-   :where [:= :campaign/id id]})
+   :from   [:campaign]
+   :where  [:= :campaign/id id]})
 
 (defn node
   [datasource global-id]

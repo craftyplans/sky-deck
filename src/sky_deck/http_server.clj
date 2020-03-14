@@ -38,28 +38,28 @@
         password (:password parameters)]
     (log/info {:username username} "login-request")
     (merge
-      (:response request)
-      (if-let [person (sd.queries/person-by-username (:sky-deck/db ctx)
-                                                     username)]
-        (if (buddy.hashers/check password (:password person))
-          (let [token (jwt/encrypt {:claims (pr-str
-                                              {:person (select-keys person
-                                                                    [:person/id
-                                                                     :person/username])
-                                               :issued-at (Date.)
-                                               :roles  #{:person}})}
-                                   (:secret-key (:sky-deck/auth ctx))
-                                   (:encryption (:sky-deck/auth ctx)))]
-            {:status 201
-             :body   {:token token}})
-          {:body   {:message "unauthorized"}
-           :status 401})
-        {:body   {:message "unauthorized"}
-         :status 401}))))
+     (:response request)
+     (if-let [person (sd.queries/person-by-username (:sky-deck/db ctx)
+                                                    username)]
+       (if (buddy.hashers/check password (:password person))
+         (let [token (jwt/encrypt {:claims (pr-str {:person (select-keys
+                                                             person
+                                                             [:person/id
+                                                              :person/username])
+                                                    :issued-at (Date.)
+                                                    :roles #{:person}})}
+                                  (:secret-key (:sky-deck/auth ctx))
+                                  (:encryption (:sky-deck/auth ctx)))]
+           {:status 201
+            :body   {:token token}})
+         {:body   {:message "unauthorized"}
+          :status 401})
+       {:body   {:message "unauthorized"}
+        :status 401}))))
 
 (defn generate-login
   [ctx]
-  (yada/resource (-> {:id :sky-deck.resource/login
+  (yada/resource (-> {:id      :sky-deck.resource/login
                       :methods {:post {:consumes   "application/json"
                                        :produces   "application/json"
                                        :parameters {:body {:username s/Str
@@ -70,42 +70,45 @@
 (defn generate-graphql-endpoint
   [schema context]
   (-> {:id :sky-deck.resource/graphql-endpoint
-       :methods {:post {:consumes "application/json"
-                        :produces "application/json"
-                        :response (fn [request]
-                                    (let [body (:body request)
-                                          query (:query body)
-                                          variables (if (string? (:variables body))
-                                                      (j/read-value (:variables body)
-                                                                    (j/object-mapper
-                                                                      {:decode-key-fn keyword}))
-                                                      (:variables body))
-                                          response (lacinia/execute
-                                                     schema
-                                                     query
-                                                     variables
-                                                     (assoc context
-                                                       :com.walmartlabs.lacinia/enable-timing?
-                                                       true))]
-                                      (dissoc response :extensions)))}}}
+       :methods
+       {:post {:consumes "application/json"
+               :produces "application/json"
+               :response
+               (fn [request]
+                 (let [body (:body request)
+                       query (:query body)
+                       variables (if (string? (:variables body))
+                                   (j/read-value (:variables body)
+                                                 (j/object-mapper
+                                                  {:decode-key-fn keyword}))
+                                   (:variables body))
+                       response (lacinia/execute
+                                 schema
+                                 query
+                                 variables
+                                 (assoc context
+                                        :com.walmartlabs.lacinia/enable-timing?
+                                        true))]
+                   (dissoc response :extensions)))}}}
       (yada/resource)))
 
 (defmethod ig/init-key :sky-deck/routes
   [_ options]
-  ["" [["/" (yada/resource
-              {:id :sky-deck.resource/index
-               :methods {:get {:produces "application/json"
-                               :consumes "application/json"
-                               :response (fn [ctx] {:hello "world"})}}})]
-
-        ["/login" (generate-login options)]
-        ["/anonymous-graphql" (generate-graphql-endpoint
-                                (get-in options [:graphql :sky-deck/anonymous-schema]) options)]
-
-        ["/dungeon-master-graphql" (yada/handler {:hello "dungeon master graphql"})]
-        ["/authenticated-player-graphql" (yada/handler {:hello "auth player graphql"})]
-
-        [true (yada/handler nil)]]])
+  [""
+   [["/"
+     (yada/resource {:id      :sky-deck.resource/index
+                     :methods {:get {:produces "application/json"
+                                     :consumes "application/json"
+                                     :response (fn [ctx] {:hello "world"})}}})]
+    ["/login" (generate-login options)]
+    ["/anonymous-graphql"
+     (generate-graphql-endpoint (get-in options
+                                        [:graphql :sky-deck/anonymous-schema])
+                                options)]
+    ["/dungeon-master-graphql" (yada/handler {:hello "dungeon master graphql"})]
+    ["/authenticated-player-graphql"
+     (yada/handler {:hello "auth player graphql"})]
+    [true (yada/handler nil)]]])
 
 (defmethod ig/init-key :sky-deck/http-server
   [_ options]

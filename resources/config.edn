@@ -3,8 +3,12 @@
  :sky-deck/connection-uri "jdbc:postgresql://localhost/sky_deck_development"
  :sky-deck/db             {:dbname "sky_deck_development"
                            :dbtype "postgresql"}
+ :sky-deck/executor       {}
  :sky-deck/graphql        {}
- :sky-deck/http-server    {:port            "5001"
-                           :sky-deck/routes #ig/ref :sky-deck/routes}
- :sky-deck/routes         {:graphql     #ig/ref :sky-deck/graphql
-                           :sky-deck/db #ig/ref :sky-deck/db}}
+ :sky-deck/http-server    {:port              "5001"
+                           :sky-deck/executor #ig/ref :sky-deck/executor
+                           :sky-deck/routes   #ig/ref :sky-deck/routes}
+ :sky-deck/routes         {:graphql           #ig/ref :sky-deck/graphql
+                           :sky-deck/db       #ig/ref :sky-deck/db
+                           :sky-deck/executor #ig/ref :sky-deck/executor
+                           :sky-deck/graphql  #ig/ref :sky-deck/graphql}}

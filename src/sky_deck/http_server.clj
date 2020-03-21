@@ -13,6 +13,7 @@
              :refer
              [attach-resolvers attach-streamers]]
             [sky-deck.queries :as sd.queries]
+            [sky-deck.graphql-ws :as sd.graphql-ws]
             [yada.yada :as yada]
             [cambium.core :as log]
             [cheshire.core :as json])
@@ -101,24 +102,10 @@
                             (dissoc response :extensions)))}}}
       (yada/resource)))
 
-
-(defmulti handle-incoming-ws-message (fn [msg _ctx] (:type msg)))
-
-(defmethod handle-incoming-ws-message "connection_init"
-  [msg {:keys [sky-deck.manifold/stream]}]
-  (log/info {:msg msg} "got-message")
-  (ms/put! stream
-           (j/write-value-as-string {:type "connection_ack"} json-mapper)))
-
-(defmethod handle-incoming-ws-message "start"
-  [msg {:keys [sky-deck.manifold/stream]}]
-  (ms/put! stream (j/write-value-as-string {:type "hello"} json-mapper)))
-
-(defmethod handle-incoming-ws-message "stop"
-  [msg {:keys [sky-deck.manifold/stream]}])
-
 (defmethod ig/init-key :sky-deck/routes
-  [_ options]
+  [_
+   {:keys [sky-deck/executor]
+    :as   options}]
   [""
    [["/"
      (yada/resource {:id      :sky-deck.resource/index
@@ -135,42 +122,38 @@
     ["/anonymous-graphql-stream-ws"
      (yada/resource
       {:methods
-       {:get {:consumes "application/json"
-              :produces "application/json"
-              :response
-              (fn [ctx]
-                (let [protocol
-                      (get-in ctx [:request :headers "sec-websocket-protocol"])]
-                  (when (not= protocol "graphql-ws")
-                    (throw (ex-info
-                            (format "Protocol '%s' unsupported as this endpoint"
-                                    protocol)
-                            {:protocol protocol})))
-                  (let [ws-stream
-                        @(http/websocket-connection
-                          (:request ctx)
-                          {:headers {"sec-websocket-protocol" protocol}})
-                        subscriptions (atom {})]
-                    ;; TODO: Try ms/consume
-                    (-> (md/future
-                         (loop []
-                           (log/info {} "waiting-for-message")
-                           (when-let [msg @(ms/take! ws-stream)]
-                             (let [msg-data (j/read-value msg json-mapper)]
-                               (log/info {:msg      msg
-                                          :msg-data msg-data}
-                                         "got-message")
-                               (handle-incoming-ws-message
-                                msg-data
-                                {:sky-deck.manifold/stream ws-stream}
-                                #_(merge
-                                   config
-                                   {:edge.manifold/stream ws-stream
-                                    :edge.yada/ctx ctx
-                                    :edge.graphql/subscription-streams-by-id
-                                    subscriptions})))
-                             (recur))))
-                        #_(md/onto executor)))))}}})]
+       {:get
+        {:consumes "application/json"
+         :produces "application/json"
+         :response
+         (fn [ctx]
+           (let [protocol (get-in ctx
+                                  [:request :headers "sec-websocket-protocol"])]
+             (when (not= protocol "graphql-ws")
+               (throw
+                (ex-info (format "Protocol '%s' unsupported as this endpoint"
+                                 protocol)
+                         {:protocol protocol})))
+             (let [ws-stream @(http/websocket-connection
+                               (:request ctx)
+                               {:headers {"sec-websocket-protocol" protocol}})
+                   subscriptions (atom {})]
+               ;; TODO: Try ms/consume
+               (-> (md/future (loop []
+                                (log/info {} "waiting-for-message")
+                                (when-let [msg @(ms/take! ws-stream)]
+                                  (let [msg-data (j/read-value msg json-mapper)]
+                                    (log/info {:msg      msg
+                                               :msg-data msg-data}
+                                              "got-message")
+                                    (sd.graphql-ws/handle-incoming-ws-message
+                                     msg-data
+                                     (assoc options
+                                            :sky-deck.manifold/stream ws-stream
+                                            :sky-deck.graphql/subscriptions
+                                            subscriptions)))
+                                  (recur))))
+                   (md/onto executor)))))}}})]
     ["/dungeon-master-graphql" (yada/handler {:hello "dungeon master graphql"})]
     ["/authenticated-player-graphql"
      (yada/handler {:hello "auth player graphql"})]

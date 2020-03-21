@@ -50,16 +50,27 @@
 
 
 (defmethod handle-incoming-ws-message "start"
-  [msg {:keys [sky-deck.manifold/stream sky-deck.graphql/subscriptions]}]
-  (let [])
+  [msg
+   {:keys [sky-deck.manifold/stream
+           sky-deck/graphql-schema
+           sky-deck.graphql/subscriptions]
+    :as   ctx}]
   (log/info {:msg           msg
              :subscriptions @subscriptions}
             "graphql-start")
   (try ;; do something
-       (catch Exception e
-         (log/error e "graphql-start-error")
-         (ms/put! stream
-                  (j/write-value-as-string (graphql-error (:id msg) e)))))
+    (let [id (some-> msg
+                     :id)
+          q (some-> msg
+                    :payload
+                    :query)
+          source (subscription-stream graphql-schema q ctx)]
+      (swap! subscriptions assoc id source)
+      (ms/connect (ms/transform (map #(j/write-value-as-string {})) source)
+                  stream))
+    (catch Exception e
+      (log/error e "graphql-start-error")
+      (ms/put! stream (j/write-value-as-string (graphql-error (:id msg) e)))))
   (ms/put! stream (j/write-value-as-string {:type "hello"} json-mapper)))
 
 

@@ -139,21 +139,25 @@
                                {:headers {"sec-websocket-protocol" protocol}})
                    subscriptions (atom {})]
                ;; TODO: Try ms/consume
-               (-> (md/future (loop []
-                                (log/info {} "waiting-for-message")
-                                (when-let [msg @(ms/take! ws-stream)]
-                                  (let [msg-data (j/read-value msg json-mapper)]
-                                    (log/info {:msg      msg
-                                               :msg-data msg-data}
-                                              "got-message")
-                                    (sd.graphql-ws/handle-incoming-ws-message
-                                     msg-data
-                                     (assoc options
-                                            :sky-deck.manifold/stream ws-stream
-                                            :sky-deck.graphql/subscriptions
-                                            subscriptions)))
-                                  (recur))))
-                   (md/onto executor)))))}}})]
+               (->
+                 (md/future
+                  (loop []
+                    (log/info {} "waiting-for-message")
+                    (when-let [msg @(ms/take! ws-stream)]
+                      (let [msg-data (j/read-value msg json-mapper)]
+                        (log/info {:msg      msg
+                                   :msg-data msg-data}
+                                  "got-message")
+                        (sd.graphql-ws/handle-incoming-ws-message
+                         msg-data
+                         (assoc options
+                                :sky-deck.manifold/stream ws-stream
+                                :sky-deck/graphql-schema
+                                (get-in options
+                                        [:graphql :sky-deck/anonymous-schema])
+                                :sky-deck.graphql/subscriptions subscriptions)))
+                      (recur))))
+                 (md/onto executor)))))}}})]
     ["/dungeon-master-graphql" (yada/handler {:hello "dungeon master graphql"})]
     ["/authenticated-player-graphql"
      (yada/handler {:hello "auth player graphql"})]

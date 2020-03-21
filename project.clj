@@ -8,7 +8,7 @@
                  [org.clojure/clojurescript "1.10.520"]
                  [reagent "0.8.1"]
                  [re-frame "0.11.0-rc3"]
-                 [re-graph "0.1.11"]
+                 [re-graph "0.1.12"]
                  [io.lettuce/lettuce-core "5.2.1.RELEASE"]
                  [medley "1.2.0"]
                  [aero "1.1.3"]

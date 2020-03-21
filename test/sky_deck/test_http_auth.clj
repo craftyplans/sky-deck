@@ -26,7 +26,6 @@
 (st/instrument)
 (s/check-asserts true)
 
-
 (defn init-test-system!
   []
   (let [config (sd.config/new-system :test)
@@ -39,11 +38,6 @@
   [fn]
   (let [system (init-test-system!)]
     (try (fn system) (finally (ig/halt! system)))))
-
-(defmacro with-system
-  [system-symbol & body]
-  `(let [~system-symbol (init-test-system!)]
-     (try (do ~@body) (finally (ig/halt! ~system-symbol)))))
 
 (def json-mapper (j/object-mapper {:decode-key-fn keyword}))
 
@@ -187,9 +181,3 @@
        #_(t/is (= {} init-objects))
        #_(t/is (= {} session-login))
        #_(t/is (not (response-ok? graphql-session)))))))
-
-#_(t/deftest test-create-campaign (let []) (t/is (false? true)))
-
-#_(t/deftest test-basic-auth (t/is (false? true)))
-
-#_(t/deftest test-anonymous-character-create (t/is (false? true)))

@@ -11,17 +11,20 @@
 (def json-mapper (j/object-mapper {:decode-key-fn keyword}))
 
 (defn subscription-stream
-  [schema q
+  [schema q variables
    {:keys [:sky-deck/executor]
     :as   config}]
   (assert schema)
   (assert (map? schema))
   (let [pared-query (l.parser/parse-query schema q nil)
-        prepared-query (l.parser/prepare-with-query-variables pared-query {})
+        prepared-query (l.parser/prepare-with-query-variables pared-query variables)
         ctx (merge config
                    {com.walmartlabs.lacinia.constants/parsed-query-key
                     prepared-query})
         source-stream (ms/stream 100 nil executor)
+
+        _ (clojure.pprint/pprint [:query (:operation-type prepared-query)])
+
         close-fn (l.executor/invoke-streamer
                   ctx
                   (fn callback [value]
@@ -48,7 +51,6 @@
            (j/write-value-as-string {:type "connection_ack"} json-mapper)))
 
 
-
 (defmethod handle-incoming-ws-message "start"
   [msg
    {:keys [sky-deck.manifold/stream
@@ -58,20 +60,21 @@
   (log/info {:msg           msg
              :subscriptions @subscriptions}
             "graphql-start")
-  (try ;; do something
+  (try
     (let [id (some-> msg
                      :id)
           q (some-> msg
                     :payload
                     :query)
-          source (subscription-stream graphql-schema q ctx)]
+          _ (clojure.pprint/pprint [:msg msg])
+          variables (some-> msg :payload :variables)
+          source (subscription-stream graphql-schema q variables ctx)]
       (swap! subscriptions assoc id source)
       (ms/connect (ms/transform (map #(j/write-value-as-string {})) source)
                   stream))
     (catch Exception e
       (log/error e "graphql-start-error")
-      (ms/put! stream (j/write-value-as-string (graphql-error (:id msg) e)))))
-  (ms/put! stream (j/write-value-as-string {:type "hello"} json-mapper)))
+      (ms/put! stream (j/write-value-as-string (graphql-error (:id msg) e))))))
 
 
 

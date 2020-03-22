@@ -6,6 +6,7 @@
     [devtools.core :as devtools]
     [reagent.core :as reagent :refer [atom]]
     [re-graph.core :as re-graph]
+    [graphql-query.core :as graphql]
     [cljs.spec.alpha :as s]))
 
 (devtools/install!)
@@ -17,6 +18,20 @@
     (js/console.log payload)
     (assoc db ::mutation payload)))
 
+(defn join-battle
+  []
+  {:operation {:operation/type :mutation
+               :operation/name "join_battle"}
+   :variables [{:variable/name :$number
+                :variable/type :Int!}]
+   :queries   [[:join_battle {:number :$number}
+                [:id
+                 :type
+                 :strength
+                 :agility
+                 :mind
+                 :soul]]]})
+
 (defn join-battle-form
   []
   [:form
@@ -25,8 +40,10 @@
    [:button {:type "submit"
              :on-click (fn [event]
                           (.preventDefault event)
-
-                         (rf/dispatch [::re-graph/mutate "" {} [::on-mutate]])
+                         (rf/dispatch [::re-graph/mutate
+                                       (graphql/graphql-query (join-battle))
+                                       {:number 1}
+                                       [::on-mutate]])
                          (js/console.log "hello" event))
              :class "btn btn-primary"} "Join Battle"]])
 
@@ -44,8 +61,6 @@
   (.querySelector js/document "#app"))
 
 (defn mount-app-element []
-  #_(rf/dispatch-sync [::initialise-world])
-  ;;  ws://localhost:9500/graphql-ws.
   (rf/dispatch [::re-graph/init
                 {:ws-url "ws://localhost:5001/anonymous-graphql-stream-ws"
                  :http-url "http://localhost:5001/anonymous-graphql"}])
